@@ -7,9 +7,10 @@ interface DevicePanelProps {
   device: Device;
   onClose: () => void;
   onUpdate: (device: Device) => void;
+  availableDevices: Device[];
 }
 
-const DevicePanel = ({ device, onClose, onUpdate }: DevicePanelProps) => {
+const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePanelProps) => {
   return (
     <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto">
       <div className="p-6">
@@ -60,6 +61,8 @@ const DevicePanel = ({ device, onClose, onUpdate }: DevicePanelProps) => {
           <NetworkAdapters
             adapters={device.networkAdapters}
             onUpdate={(adapters) => onUpdate({ ...device, networkAdapters: adapters })}
+            availableDevices={availableDevices}
+            currentDevice={device}
           />
         </div>
       </div>

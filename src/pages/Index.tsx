@@ -110,6 +110,7 @@ const Index = () => {
           device={selectedDevice}
           onClose={() => setSelectedDevice(null)}
           onUpdate={handleUpdateDevice}
+          availableDevices={rack.devices}
         />
       )}
     </div>

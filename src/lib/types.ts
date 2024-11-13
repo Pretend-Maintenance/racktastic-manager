@@ -7,6 +7,7 @@ export interface NetworkAdapter {
   speed: string;
   port: number;
   connected: boolean;
+  connectedToDevice?: string;
 }
 
 export interface Device {
