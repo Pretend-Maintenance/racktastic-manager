@@ -52,6 +52,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        rack: {
+          frame: "#2C3E50",
+          slot: "#34495E",
+          rail: "#7F8C8D",
+        },
+        device: {
+          server: "#2980B9",
+          switch: "#27AE60",
+          firewall: "#C0392B",
+          storage: "#8E44AD",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -67,10 +78,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "slide-in": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "slide-in": "slide-in 0.3s ease-out",
       },
     },
   },
