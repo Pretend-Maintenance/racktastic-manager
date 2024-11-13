@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Device, Rack } from "@/lib/types";
+import { Device, Rack, DeviceType } from "@/lib/types";
 import { Server, Network, Shield, Database, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
