@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { Device, Rack } from "@/lib/types";
+import { Device, Rack, Location } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-// Sample data - in a real app this would come from an API
-const sampleRack: Rack = {
-  id: "rack1",
-  name: "Rack A1",
-  totalU: 42,
-  devices: [
+// Sample data with location
+const sampleLocation: Location = {
+  id: "loc1",
+  name: "Data Center 1",
+  racks: [
+    {
+      id: "rack1",
+      name: "Rack A1",
+      location: "Row 1",
+      totalU: 42,
+      devices: [
     {
       id: "dev1",
       name: "Web Server 1",
@@ -77,30 +85,81 @@ const sampleRack: Rack = {
         },
       ],
     },
+      ],
+    },
   ],
 };
 
 const Index = () => {
-  const [rack, setRack] = useState<Rack>(sampleRack);
+  const [location, setLocation] = useState<Location>(sampleLocation);
+  const [selectedRack, setSelectedRack] = useState<Rack>(sampleLocation.racks[0]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleUpdateRack = (updatedRack: Rack) => {
+    const newRacks = location.racks.map(rack =>
+      rack.id === updatedRack.id ? updatedRack : rack
+    );
+    setLocation({ ...location, racks: newRacks });
+    setSelectedRack(updatedRack);
+  };
 
   const handleUpdateDevice = (updatedDevice: Device) => {
-    const newDevices = rack.devices.map(device =>
+    const newDevices = selectedRack.devices.map(device =>
       device.id === updatedDevice.id ? updatedDevice : device
     );
-    setRack({ ...rack, devices: newDevices });
+    const updatedRack = { ...selectedRack, devices: newDevices };
+    handleUpdateRack(updatedRack);
+  };
+
+  const handleNameChange = (newName: string) => {
+    const updatedRack = { ...selectedRack, name: newName };
+    handleUpdateRack(updatedRack);
+    toast.success("Rack name updated");
+  };
+
+  const handleLocationChange = (newLocation: string) => {
+    const updatedRack = { ...selectedRack, location: newLocation };
+    handleUpdateRack(updatedRack);
+    toast.success("Rack location updated");
   };
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Data Center Management</h1>
-        
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-4">Data Center Management</h1>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold mb-2">{location.name}</h2>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Input
+                    value={selectedRack.name}
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder="Rack Name"
+                  />
+                  <Input
+                    value={selectedRack.location}
+                    onChange={(e) => handleLocationChange(e.target.value)}
+                    placeholder="Rack Location"
+                  />
+                  <Button onClick={() => setIsEditing(false)}>Save</Button>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  Edit Rack Details
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-8">
           <RackView
-            rack={rack}
+            rack={selectedRack}
             onSelectDevice={setSelectedDevice}
-            onUpdateRack={setRack}
+            onUpdateRack={handleUpdateRack}
           />
         </div>
       </div>
@@ -110,7 +169,7 @@ const Index = () => {
           device={selectedDevice}
           onClose={() => setSelectedDevice(null)}
           onUpdate={handleUpdateDevice}
-          availableDevices={rack.devices}
+          availableDevices={selectedRack.devices}
         />
       )}
     </div>

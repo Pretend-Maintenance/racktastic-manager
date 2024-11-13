@@ -16,8 +16,8 @@ export interface Device {
   type: DeviceType;
   manufacturer: string;
   model: string;
-  height: number; // in U units
-  position: number; // rack position
+  height: number;
+  position: number;
   networkAdapters: NetworkAdapter[];
   status: "active" | "inactive" | "maintenance";
 }
@@ -27,4 +27,11 @@ export interface Rack {
   name: string;
   totalU: number;
   devices: Device[];
+  location: string;
+}
+
+export interface Location {
+  id: string;
+  name: string;
+  racks: Rack[];
 }

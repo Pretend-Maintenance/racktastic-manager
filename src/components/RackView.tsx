@@ -3,6 +3,22 @@ import { Device, Rack } from "@/lib/types";
 import { Server, Network, Shield, Database, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface RackViewProps {
   rack: Rack;
@@ -12,6 +28,16 @@ interface RackViewProps {
 
 const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
   const [draggedDevice, setDraggedDevice] = useState<Device | null>(null);
+  const [newDevice, setNewDevice] = useState<Partial<Device>>({
+    name: "",
+    type: "server",
+    manufacturer: "",
+    model: "",
+    height: 1,
+    position: 1,
+    networkAdapters: [],
+    status: "inactive"
+  });
 
   const getDeviceIcon = (type: Device["type"]) => {
     switch (type) {
@@ -44,6 +70,43 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
     onUpdateRack({ ...rack, devices: newDevices });
     setDraggedDevice(null);
     toast.success("Device moved successfully");
+  };
+
+  const handleAddDevice = () => {
+    if (!newDevice.name || !newDevice.type) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const device: Device = {
+      id: crypto.randomUUID(),
+      name: newDevice.name,
+      type: newDevice.type as DeviceType,
+      manufacturer: newDevice.manufacturer || "Unknown",
+      model: newDevice.model || "Generic",
+      height: newDevice.height || 1,
+      position: newDevice.position || 1,
+      networkAdapters: [],
+      status: "inactive"
+    };
+
+    onUpdateRack({
+      ...rack,
+      devices: [...rack.devices, device]
+    });
+
+    setNewDevice({
+      name: "",
+      type: "server",
+      manufacturer: "",
+      model: "",
+      height: 1,
+      position: 1,
+      networkAdapters: [],
+      status: "inactive"
+    });
+
+    toast.success("Device added successfully");
   };
 
   const renderSlots = () => {
@@ -84,14 +147,94 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
 
   return (
     <div className="bg-rack-frame p-4 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-white">{rack.name}</h2>
-        <Button variant="outline" size="sm" onClick={() => toast.info("Add device coming soon!")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Device
-        </Button>
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white">{rack.name}</h2>
+            <p className="text-sm text-gray-300">Location: {rack.location}</p>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Device
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Device</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Device Name</Label>
+                  <Input
+                    id="name"
+                    value={newDevice.name}
+                    onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="type">Device Type</Label>
+                  <Select
+                    value={newDevice.type}
+                    onValueChange={(value) => setNewDevice({ ...newDevice, type: value as DeviceType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="server">Server</SelectItem>
+                      <SelectItem value="switch">Switch</SelectItem>
+                      <SelectItem value="firewall">Firewall</SelectItem>
+                      <SelectItem value="storage">Storage</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="manufacturer">Manufacturer</Label>
+                  <Input
+                    id="manufacturer"
+                    value={newDevice.manufacturer}
+                    onChange={(e) => setNewDevice({ ...newDevice, manufacturer: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="model">Model</Label>
+                  <Input
+                    id="model"
+                    value={newDevice.model}
+                    onChange={(e) => setNewDevice({ ...newDevice, model: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="height">Height (U)</Label>
+                  <Input
+                    id="height"
+                    type="number"
+                    min="1"
+                    value={newDevice.height}
+                    onChange={(e) => setNewDevice({ ...newDevice, height: parseInt(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="position">Position</Label>
+                  <Input
+                    id="position"
+                    type="number"
+                    min="1"
+                    max={rack.totalU}
+                    value={newDevice.position}
+                    onChange={(e) => setNewDevice({ ...newDevice, position: parseInt(e.target.value) })}
+                  />
+                </div>
+                <Button onClick={handleAddDevice}>Add Device</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
-      <div className="relative border-x-8 border-rack-rail">
+      <div className="relative border-x-8 border-rack-rail mt-4">
         {renderSlots()}
       </div>
     </div>
