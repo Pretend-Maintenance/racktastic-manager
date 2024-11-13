@@ -2,12 +2,12 @@ import { NetworkAdapter } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface NetworkAdapterFormProps {
   onAdd: (adapter: Omit<NetworkAdapter, "id">) => void;
-  onClose: () => void; // Added for closing the modal
-  refreshPane: () => void; // Function to refresh side pane
+  onClose: () => void;
+  refreshPane: () => void;
 }
 
 export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapterFormProps) => {
@@ -24,13 +24,13 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
       name,
       type,
       speed,
-      port: port || "N/A", // Port as a name
+      port: port || "N/A",
       ip,
       vlan,
       connected: false,
     });
-    refreshPane(); // Trigger refresh
-    onClose(); // Close modal after adding
+    refreshPane();
+    onClose();
     setName("");
     setType("ethernet");
     setSpeed("");
@@ -71,6 +71,7 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
           <SelectContent>
             <SelectItem value="ethernet">Ethernet</SelectItem>
             <SelectItem value="fiber">Fiber</SelectItem>
+            {/* Exclude template types like switches */}
           </SelectContent>
         </Select>
       </div>
