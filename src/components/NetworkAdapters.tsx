@@ -1,6 +1,6 @@
 import { NetworkAdapter, Device } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Cable, Plus } from "lucide-react";
+import { Cable, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Select,
@@ -9,6 +9,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { NetworkAdapterForm } from "./NetworkAdapterForm";
 
 interface NetworkAdaptersProps {
   adapters: NetworkAdapter[];
@@ -45,14 +53,38 @@ const NetworkAdapters = ({
     }
   };
 
+  const handleAddAdapter = (newAdapter: Omit<NetworkAdapter, "id">) => {
+    const adapter: NetworkAdapter = {
+      ...newAdapter,
+      id: crypto.randomUUID(),
+    };
+    onUpdate([...adapters, adapter]);
+    toast.success("Network adapter added successfully");
+  };
+
+  const handleRemoveAdapter = (id: string) => {
+    onUpdate(adapters.filter(adapter => adapter.id !== id));
+    toast.success("Network adapter removed");
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Network Adapters</h3>
-        <Button variant="outline" size="sm" onClick={() => toast.info("Add adapter coming soon!")}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Adapter
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Adapter
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Network Adapter</DialogTitle>
+            </DialogHeader>
+            <NetworkAdapterForm onAdd={handleAddAdapter} />
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="space-y-3">
@@ -103,6 +135,13 @@ const NetworkAdapters = ({
                       <SelectItem value="custom">Custom Connection</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleRemoveAdapter(adapter.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               )}
             </div>

@@ -1,7 +1,9 @@
 import { Device, NetworkAdapter } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import NetworkAdapters from "./NetworkAdapters";
+import { toast } from "sonner";
 
 interface DevicePanelProps {
   device: Device;
@@ -11,6 +13,12 @@ interface DevicePanelProps {
 }
 
 const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePanelProps) => {
+  const handleStatusChange = (enabled: boolean) => {
+    const newStatus = enabled ? 'active' : 'inactive';
+    onUpdate({ ...device, status: newStatus });
+    toast.success(`System ${enabled ? 'enabled' : 'disabled'}`);
+  };
+
   return (
     <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto">
       <div className="p-6">
@@ -25,6 +33,22 @@ const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePane
           <div>
             <h3 className="text-lg font-semibold mb-2">Device Information</h3>
             <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">System Status</span>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={device.status === 'active'}
+                    onCheckedChange={handleStatusChange}
+                  />
+                  <span className={`font-medium ${
+                    device.status === 'active' ? 'text-green-500' :
+                    device.status === 'maintenance' ? 'text-yellow-500' :
+                    'text-red-500'
+                  }`}>
+                    {device.status}
+                  </span>
+                </div>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Type</span>
                 <span className="font-medium">{device.type}</span>
@@ -44,16 +68,6 @@ const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePane
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Position</span>
                 <span className="font-medium">U{device.position}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span className={`font-medium ${
-                  device.status === 'active' ? 'text-green-500' :
-                  device.status === 'maintenance' ? 'text-yellow-500' :
-                  'text-red-500'
-                }`}>
-                  {device.status}
-                </span>
               </div>
             </div>
           </div>
