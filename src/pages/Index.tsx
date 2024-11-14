@@ -4,9 +4,17 @@ import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-// Sample data with location
+// Initial sample data
 const sampleLocation: Location = {
   id: "loc1",
   name: "Data Center 1",
@@ -95,6 +103,41 @@ const Index = () => {
   const [selectedRack, setSelectedRack] = useState<Rack>(sampleLocation.racks[0]);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [newRackName, setNewRackName] = useState("");
+  const [newRackLocation, setNewRackLocation] = useState("");
+  const [dataCenterName, setDataCenterName] = useState(location.name);
+
+  // Handle data center name update
+  const handleDataCenterNameChange = (newName: string) => {
+    setLocation(prev => ({ ...prev, name: newName }));
+    setDataCenterName(newName);
+    toast.success("Data center name updated");
+  };
+
+  // Handle adding new rack
+  const handleAddRack = () => {
+    if (!newRackName || !newRackLocation) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const newRack: Rack = {
+      id: crypto.randomUUID(),
+      name: newRackName,
+      location: newRackLocation,
+      totalU: 42, // Default size
+      devices: [],
+    };
+
+    setLocation(prev => ({
+      ...prev,
+      racks: [...prev.racks, newRack],
+    }));
+
+    setNewRackName("");
+    setNewRackLocation("");
+    toast.success("New rack added successfully");
+  };
 
   const handleUpdateRack = (updatedRack: Rack) => {
     const newRacks = location.racks.map(rack =>
@@ -112,55 +155,68 @@ const Index = () => {
     handleUpdateRack(updatedRack);
   };
 
-  const handleNameChange = (newName: string) => {
-    const updatedRack = { ...selectedRack, name: newName };
-    handleUpdateRack(updatedRack);
-    toast.success("Rack name updated");
-  };
-
-  const handleLocationChange = (newLocation: string) => {
-    const updatedRack = { ...selectedRack, location: newLocation };
-    handleUpdateRack(updatedRack);
-    toast.success("Rack location updated");
-  };
-
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">Data Center Management</h1>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold mb-2">{location.name}</h2>
-              {isEditing ? (
-                <div className="space-y-2">
-                  <Input
-                    value={selectedRack.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="Rack Name"
-                  />
-                  <Input
-                    value={selectedRack.location}
-                    onChange={(e) => handleLocationChange(e.target.value)}
-                    placeholder="Rack Location"
-                  />
-                  <Button onClick={() => setIsEditing(false)}>Save</Button>
-                </div>
-              ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Edit Rack Details
-                </Button>
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="space-y-2">
+              <Input
+                value={dataCenterName}
+                onChange={(e) => handleDataCenterNameChange(e.target.value)}
+                className="text-2xl font-bold"
+                placeholder="Data Center Name"
+              />
             </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Rack
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Rack</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Rack Name</label>
+                    <Input
+                      value={newRackName}
+                      onChange={(e) => setNewRackName(e.target.value)}
+                      placeholder="Enter rack name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Location</label>
+                    <Input
+                      value={newRackLocation}
+                      onChange={(e) => setNewRackLocation(e.target.value)}
+                      placeholder="Enter rack location"
+                    />
+                  </div>
+                  <Button onClick={handleAddRack}>Add Rack</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-8">
-          <RackView
-            rack={selectedRack}
-            onSelectDevice={setSelectedDevice}
-            onUpdateRack={handleUpdateRack}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {location.racks.map((rack) => (
+              <div
+                key={rack.id}
+                className="cursor-pointer"
+                onClick={() => setSelectedRack(rack)}
+              >
+                <RackView
+                  rack={rack}
+                  onSelectDevice={setSelectedDevice}
+                  onUpdateRack={handleUpdateRack}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

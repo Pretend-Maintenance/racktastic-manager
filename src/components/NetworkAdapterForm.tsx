@@ -11,6 +11,7 @@ interface NetworkAdapterFormProps {
 }
 
 export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapterFormProps) => {
+  // State for form fields
   const [name, setName] = useState("");
   const [type, setType] = useState<"ethernet" | "fiber">("ethernet");
   const [speed, setSpeed] = useState("");
@@ -31,24 +32,13 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
     });
     refreshPane();
     onClose();
+    // Reset form
     setName("");
     setType("ethernet");
     setSpeed("");
     setPort("");
     setIp("");
     setVlan("");
-  };
-
-  const templates = [
-    { name: "48 Port Switch", type: "ethernet", speed: "1GbE", port: "48 Ports" },
-    { name: "24 Port Switch", type: "ethernet", speed: "1GbE", port: "24 Ports" },
-  ];
-
-  const handleTemplateSelect = (template: Omit<NetworkAdapter, "id">) => {
-    setName(template.name);
-    setType(template.type as "ethernet" | "fiber");
-    setSpeed(template.speed);
-    setPort(template.port);
   };
 
   return (
@@ -71,7 +61,6 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
           <SelectContent>
             <SelectItem value="ethernet">Ethernet</SelectItem>
             <SelectItem value="fiber">Fiber</SelectItem>
-            {/* Exclude template types like switches */}
           </SelectContent>
         </Select>
       </div>
@@ -108,13 +97,6 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
           value={vlan}
           onChange={(e) => setVlan(e.target.value)}
         />
-      </div>
-      <div className="space-y-2">
-        {templates.map((template) => (
-          <Button key={template.name} onClick={() => handleTemplateSelect(template)}>
-            {template.name}
-          </Button>
-        ))}
       </div>
       <Button type="submit">Add Adapter</Button>
     </form>
