@@ -1,121 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Device, Rack, Location } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AddRackDialog } from "@/components/AddRackDialog";
+import { saveState, loadState } from "@/lib/storage";
 
-const sampleLocation: Location = {
+const defaultLocation: Location = {
   id: "loc1",
   name: "Data Center 1",
-  racks: [
-    {
-      id: "rack1",
-      name: "Rack A1",
-      location: "Row 1",
-      totalU: 42,
-      devices: [
-        {
-          id: "dev1",
-          name: "Web Server 1",
-          type: "server",
-          manufacturer: "Dell",
-          model: "PowerEdge R740",
-          height: 2,
-          position: 40,
-          status: "active",
-          assetReference: "WS-001",
-          networkAdapters: [
-            {
-              id: "nic1",
-              name: "Primary NIC",
-              type: "ethernet",
-              speed: "10GbE",
-              port: "1",
-              connected: true,
-            },
-            {
-              id: "nic2",
-              name: "Backup NIC",
-              type: "ethernet",
-              speed: "10GbE",
-              port: "2",
-              connected: false,
-            },
-          ],
-        },
-        {
-          id: "dev2",
-          name: "Core Switch",
-          type: "switch",
-          manufacturer: "Cisco",
-          model: "Nexus 9300",
-          height: 1,
-          position: 38,
-          status: "active",
-          networkAdapters: [
-            {
-              id: "port1",
-              name: "Uplink 1",
-              type: "fiber",
-              speed: "100GbE",
-              port: "1",
-              connected: true,
-            },
-          ],
-        },
-        {
-          id: "dev3",
-          name: "Storage Array",
-          type: "storage",
-          manufacturer: "NetApp",
-          model: "FAS8700",
-          height: 4,
-          position: 33,
-          status: "maintenance",
-          networkAdapters: [
-            {
-              id: "san1",
-              name: "SAN Interface",
-              type: "fiber",
-              speed: "32Gb FC",
-              port: "1",
-              connected: true,
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  racks: [],
 };
 
 const Index = () => {
-  const [location, setLocation] = useState<Location>(sampleLocation);
-  const [selectedRack, setSelectedRack] = useState<Rack>(sampleLocation.racks[0]);
+  const [location, setLocation] = useState<Location>(defaultLocation);
+  const [selectedRack, setSelectedRack] = useState<Rack | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<Device | null>(null);
-  const [newRack, setNewRack] = useState<Partial<Rack>>({
-    name: "",
-    location: "",
-    totalU: 42,
-  });
+
+  // Load initial state from localStorage
+  useEffect(() => {
+    const savedState = loadState();
+    if (savedState) {
+      setLocation(savedState);
+      if (savedState.racks.length > 0) {
+        setSelectedRack(savedState.racks[0]);
+      }
+    }
+  }, []);
 
   const handleUpdateRack = (updatedRack: Rack) => {
     const newRacks = location.racks.map(rack =>
       rack.id === updatedRack.id ? updatedRack : rack
     );
-    setLocation({ ...location, racks: newRacks });
+    const newLocation = { ...location, racks: newRacks };
+    setLocation(newLocation);
     setSelectedRack(updatedRack);
+    saveState(newLocation);
 
     // Log the rack update
     const logEntry = {
@@ -133,10 +54,10 @@ const Index = () => {
 
   const handleDeleteRack = (rackId: string) => {
     const newRacks = location.racks.filter(rack => rack.id !== rackId);
-    setLocation({ ...location, racks: newRacks });
-    if (selectedRack.id === rackId) {
-      setSelectedRack(newRacks[0]);
-    }
+    const newLocation = { ...location, racks: newRacks };
+    setLocation(newLocation);
+    setSelectedRack(newRacks[0] || null);
+    saveState(newLocation);
 
     // Log the rack deletion
     const logEntry = {
@@ -146,25 +67,27 @@ const Index = () => {
       action: "Deleted",
       itemType: "rack",
       itemId: rackId,
-      itemName: selectedRack.name,
+      itemName: selectedRack?.name || "",
       changes: [],
     };
     localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
   };
 
-  const handleAddRack = () => {
-    const newRackComplete: Rack = {
+  const handleAddRack = (rackData: Omit<Rack, "id" | "devices">) => {
+    const newRack: Rack = {
       id: crypto.randomUUID(),
-      name: newRack.name || "",
-      location: newRack.location || "",
-      totalU: newRack.totalU || 42,
+      ...rackData,
       devices: [],
     };
 
-    setLocation({
+    const newLocation = {
       ...location,
-      racks: [...location.racks, newRackComplete],
-    });
+      racks: [...location.racks, newRack],
+    };
+    
+    setLocation(newLocation);
+    setSelectedRack(newRack);
+    saveState(newLocation);
 
     // Log the rack addition
     const logEntry = {
@@ -173,28 +96,26 @@ const Index = () => {
       user: "admin",
       action: "Added",
       itemType: "rack",
-      itemId: newRackComplete.id,
-      itemName: newRackComplete.name,
+      itemId: newRack.id,
+      itemName: newRack.name,
       changes: [],
     };
     localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
-
-    setNewRack({
-      name: "",
-      location: "",
-      totalU: 42,
-    });
     toast.success("Rack added successfully");
   };
 
   const handleUpdateDevice = (updatedDevice: Device) => {
+    if (!selectedRack) return;
+
     const updatedRack = {
       ...selectedRack,
       devices: selectedRack.devices.map(device =>
         device.id === updatedDevice.id ? updatedDevice : device
       ),
     };
+
     handleUpdateRack(updatedRack);
+    setSelectedDevice(updatedDevice);
 
     // Log the device update
     const logEntry = {
@@ -208,54 +129,13 @@ const Index = () => {
       changes: [],
     };
     localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
-    setSelectedDevice(updatedDevice);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="flex justify-between items-center px-4 py-2 border-b">
         <MainNav />
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Rack
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Rack</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Rack Name</Label>
-                <Input
-                  id="name"
-                  value={newRack.name}
-                  onChange={(e) => setNewRack({ ...newRack, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={newRack.location}
-                  onChange={(e) => setNewRack({ ...newRack, location: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="totalU">Total U</Label>
-                <Input
-                  id="totalU"
-                  type="number"
-                  value={newRack.totalU}
-                  onChange={(e) => setNewRack({ ...newRack, totalU: parseInt(e.target.value) })}
-                />
-              </div>
-              <Button onClick={handleAddRack}>Add Rack</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <AddRackDialog onAddRack={handleAddRack} />
       </div>
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
@@ -285,7 +165,7 @@ const Index = () => {
           device={selectedDevice}
           onClose={() => setSelectedDevice(null)}
           onUpdate={handleUpdateDevice}
-          availableDevices={selectedRack.devices}
+          availableDevices={selectedRack?.devices || []}
         />
       )}
     </div>
