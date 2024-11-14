@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
+
 interface NetworkAdapterFormProps {
   onAdd: (adapter: Omit<NetworkAdapter, "id">) => void;
   onClose: () => void;
@@ -13,7 +14,7 @@ interface NetworkAdapterFormProps {
 export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapterFormProps) => {
   const [name, setName] = useState("");
   const [type, setType] = useState<"ethernet" | "fiber">("ethernet");
-  const [speed, setSpeed] = useState("");
+  const [speed, setSpeed] = useState(""); // State to hold the selected/custom speed
   const [port, setPort] = useState("");
   const [ip, setIp] = useState("");
   const [vlan, setVlan] = useState("");
@@ -56,14 +57,18 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <label>Speed</label>
-        <Input
-          placeholder="Speed (e.g., 1GbE, 10GbE)"
-          value={speed}
-          onChange={(e) => setSpeed(e.target.value)}
-        />
-      </div>
+      <Select value={type} onValueChange={(value: "100Mbit" | "1Gbit"| "2.5Gbit" | "10Gbit" | "100Gbit") => setSpeed(value)}>
+      <SelectTrigger>
+          <SelectValue placeholder="Select Speed" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="100Mbit">100Mbit</SelectItem>
+            <SelectItem value="1Gbit">1Gbit</SelectItem>
+            <SelectItem value="2.5Gbit">2.5Gbit</SelectItem>
+            <SelectItem value="10Gbit">10Gbit</SelectItem>
+            <SelectItem value="100Gbit">100Gbit</SelectItem>
+          </SelectContent>
+          </Select>
       <div>
         <label>Port Name</label>
         <Input
