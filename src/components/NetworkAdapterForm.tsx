@@ -57,6 +57,7 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
           </SelectContent>
         </Select>
       </div>
+      <label>Speed select</label>
       <Select value={type} onValueChange={(value: "100Mbit" | "1Gbit"| "2.5Gbit" | "10Gbit" | "100Gbit") => setSpeed(value)}>
       <SelectTrigger>
           <SelectValue placeholder="Select Speed" />
