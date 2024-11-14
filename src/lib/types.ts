@@ -5,7 +5,7 @@ export interface NetworkAdapter {
   name: string;
   type: "ethernet" | "fiber";
   speed: string;
-  port: string; // Changed from number to string since we're using string input
+  port: string;
   connected: boolean;
   connectedToDevice?: string;
   ip?: string;
@@ -22,6 +22,7 @@ export interface Device {
   position: number;
   networkAdapters: NetworkAdapter[];
   status: "active" | "inactive" | "maintenance";
+  assetReference?: string;
 }
 
 export interface Rack {
@@ -36,4 +37,19 @@ export interface Location {
   id: string;
   name: string;
   racks: Rack[];
+}
+
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  user: string;
+  action: string;
+  itemType: "device" | "rack" | "networkAdapter";
+  itemId: string;
+  itemName: string;
+  changes: {
+    field: string;
+    oldValue: string;
+    newValue: string;
+  }[];
 }

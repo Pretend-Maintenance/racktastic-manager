@@ -14,7 +14,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-// Initial sample data
 const sampleLocation: Location = {
   id: "loc1",
   name: "Data Center 1",
@@ -25,34 +24,35 @@ const sampleLocation: Location = {
       location: "Row 1",
       totalU: 42,
       devices: [
-    {
-      id: "dev1",
-      name: "Web Server 1",
-      type: "server",
-      manufacturer: "Dell",
-      model: "PowerEdge R740",
-      height: 2,
-      position: 40,
-      status: "active",
-      networkAdapters: [
         {
-          id: "nic1",
-          name: "Primary NIC",
-          type: "ethernet",
-          speed: "10GbE",
-          port: 1,
-          connected: true,
+          id: "dev1",
+          name: "Web Server 1",
+          type: "server",
+          manufacturer: "Dell",
+          model: "PowerEdge R740",
+          height: 2,
+          position: 40,
+          status: "active",
+          assetReference: "WS-001",
+          networkAdapters: [
+            {
+              id: "nic1",
+              name: "Primary NIC",
+              type: "ethernet",
+              speed: "10GbE",
+              port: "1",
+              connected: true,
+            },
+            {
+              id: "nic2",
+              name: "Backup NIC",
+              type: "ethernet",
+              speed: "10GbE",
+              port: "2",
+              connected: false,
+            },
+          ],
         },
-        {
-          id: "nic2",
-          name: "Backup NIC",
-          type: "ethernet",
-          speed: "10GbE",
-          port: 2,
-          connected: false,
-        },
-      ],
-    },
     {
       id: "dev2",
       name: "Core Switch",

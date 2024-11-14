@@ -166,15 +166,16 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Device Name</Label>
+                  <Label htmlFor="name">Device Name *</Label>
                   <Input
                     id="name"
                     value={newDevice.name}
                     onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="type">Device Type</Label>
+                  <Label htmlFor="type">Device Type *</Label>
                   <Select
                     value={newDevice.type}
                     onValueChange={(value) => setNewDevice({ ...newDevice, type: value as DeviceType })}
@@ -192,33 +193,36 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="manufacturer">Manufacturer</Label>
+                  <Label htmlFor="manufacturer">Manufacturer *</Label>
                   <Input
                     id="manufacturer"
                     value={newDevice.manufacturer}
                     onChange={(e) => setNewDevice({ ...newDevice, manufacturer: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="model">Model</Label>
+                  <Label htmlFor="model">Model *</Label>
                   <Input
                     id="model"
                     value={newDevice.model}
                     onChange={(e) => setNewDevice({ ...newDevice, model: e.target.value })}
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="height">Height (U)</Label>
+                  <Label htmlFor="height">Height (U) *</Label>
                   <Input
                     id="height"
                     type="number"
                     min="1"
                     value={newDevice.height}
                     onChange={(e) => setNewDevice({ ...newDevice, height: parseInt(e.target.value) })}
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="position">Position</Label>
+                  <Label htmlFor="position">Position *</Label>
                   <Input
                     id="position"
                     type="number"
@@ -226,6 +230,16 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack }: RackViewProps) => {
                     max={rack.totalU}
                     value={newDevice.position}
                     onChange={(e) => setNewDevice({ ...newDevice, position: parseInt(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="assetReference">Asset Reference</Label>
+                  <Input
+                    id="assetReference"
+                    value={newDevice.assetReference}
+                    onChange={(e) => setNewDevice({ ...newDevice, assetReference: e.target.value })}
+                    placeholder="Optional asset reference"
                   />
                 </div>
                 <Button onClick={handleAddDevice}>Add Device</Button>

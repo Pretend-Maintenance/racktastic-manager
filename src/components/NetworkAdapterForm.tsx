@@ -11,7 +11,6 @@ interface NetworkAdapterFormProps {
 }
 
 export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapterFormProps) => {
-  // State for form fields
   const [name, setName] = useState("");
   const [type, setType] = useState<"ethernet" | "fiber">("ethernet");
   const [speed, setSpeed] = useState("");
@@ -24,7 +23,7 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
     onAdd({
       name,
       type,
-      speed,
+      speed: speed || "N/A",
       port: port || "N/A",
       ip,
       vlan,
@@ -32,13 +31,6 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
     });
     refreshPane();
     onClose();
-    // Reset form
-    setName("");
-    setType("ethernet");
-    setSpeed("");
-    setPort("");
-    setIp("");
-    setVlan("");
   };
 
   return (
@@ -65,21 +57,19 @@ export const NetworkAdapterForm = ({ onAdd, onClose, refreshPane }: NetworkAdapt
         </Select>
       </div>
       <div>
-        <label className="required">Speed *</label>
+        <label>Speed</label>
         <Input
           placeholder="Speed (e.g., 1GbE, 10GbE)"
           value={speed}
           onChange={(e) => setSpeed(e.target.value)}
-          required
         />
       </div>
       <div>
-        <label className="required">Port Name *</label>
+        <label>Port Name</label>
         <Input
           placeholder="Port Name"
           value={port}
           onChange={(e) => setPort(e.target.value)}
-          required
         />
       </div>
       <div>
