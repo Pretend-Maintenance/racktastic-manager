@@ -21,7 +21,7 @@ const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePane
   }, [device]);
 
   const handleStatusChange = (enabled: boolean) => {
-    const newStatus = enabled ? 'active' : 'inactive';
+    const newStatus = enabled ? 'active' as const : 'inactive' as const;
     const updatedDevice = { ...currentDevice, status: newStatus };
     setCurrentDevice(updatedDevice);
     onUpdate(updatedDevice);
