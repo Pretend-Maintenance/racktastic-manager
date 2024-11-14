@@ -5,9 +5,11 @@ export interface NetworkAdapter {
   name: string;
   type: "ethernet" | "fiber";
   speed: string;
-  port: number;
+  port: string; // Changed from number to string since we're using string input
   connected: boolean;
   connectedToDevice?: string;
+  ip?: string;
+  vlan?: string;
 }
 
 export interface Device {

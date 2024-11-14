@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { NetworkAdapterForm } from "./NetworkAdapterForm";
+import { useState } from "react";
 
 interface NetworkAdaptersProps {
   adapters: NetworkAdapter[];
@@ -31,6 +32,9 @@ const NetworkAdapters = ({
   availableDevices = [], 
   currentDevice 
 }: NetworkAdaptersProps) => {
+  // Add state to control dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     const newAdapters = adapters.map(adapter =>
       adapter.id === id
@@ -71,7 +75,7 @@ const NetworkAdapters = ({
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Network Adapters</h3>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-2" />
@@ -82,7 +86,11 @@ const NetworkAdapters = ({
             <DialogHeader>
               <DialogTitle>Add Network Adapter</DialogTitle>
             </DialogHeader>
-            <NetworkAdapterForm onAdd={handleAddAdapter} />
+            <NetworkAdapterForm 
+              onAdd={handleAddAdapter} 
+              onClose={() => setIsDialogOpen(false)}
+              refreshPane={() => {}} // Add empty refreshPane function
+            />
           </DialogContent>
         </Dialog>
       </div>
