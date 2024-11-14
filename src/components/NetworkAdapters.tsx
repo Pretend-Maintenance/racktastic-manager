@@ -32,10 +32,11 @@ const NetworkAdapters = ({
   availableDevices = [], 
   currentDevice 
 }: NetworkAdaptersProps) => {
-  // Add state to control dialog
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const toggleConnection = (id: string, targetDeviceId?: string) => {
+    if (!currentDevice) return;
+    
     const newAdapters = adapters.map(adapter =>
       adapter.id === id
         ? { 
@@ -45,6 +46,7 @@ const NetworkAdapters = ({
           }
         : adapter
     );
+    
     onUpdate(newAdapters);
     
     const adapter = newAdapters.find(a => a.id === id);

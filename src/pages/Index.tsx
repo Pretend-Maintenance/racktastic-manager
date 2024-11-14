@@ -5,7 +5,7 @@ import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
 import { AddRackDialog } from "@/components/AddRackDialog";
-import { saveState, loadState } from "@/lib/storage";
+import { saveState, loadState, updateConnectedDevices } from "@/lib/storage";
 
 const defaultLocation: Location = {
   id: "loc1",
@@ -37,19 +37,6 @@ const Index = () => {
     setLocation(newLocation);
     setSelectedRack(updatedRack);
     saveState(newLocation);
-
-    // Log the rack update
-    const logEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      user: "admin",
-      action: "Updated",
-      itemType: "rack",
-      itemId: updatedRack.id,
-      itemName: updatedRack.name,
-      changes: [],
-    };
-    localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
   };
 
   const handleDeleteRack = (rackId: string) => {
@@ -58,19 +45,6 @@ const Index = () => {
     setLocation(newLocation);
     setSelectedRack(newRacks[0] || null);
     saveState(newLocation);
-
-    // Log the rack deletion
-    const logEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      user: "admin",
-      action: "Deleted",
-      itemType: "rack",
-      itemId: rackId,
-      itemName: selectedRack?.name || "",
-      changes: [],
-    };
-    localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
   };
 
   const handleAddRack = (rackData: Omit<Rack, "id" | "devices">) => {
@@ -88,58 +62,36 @@ const Index = () => {
     setLocation(newLocation);
     setSelectedRack(newRack);
     saveState(newLocation);
-
-    // Log the rack addition
-    const logEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      user: "admin",
-      action: "Added",
-      itemType: "rack",
-      itemId: newRack.id,
-      itemName: newRack.name,
-      changes: [],
-    };
-    localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
     toast.success("Rack added successfully");
   };
 
   const handleUpdateDevice = (updatedDevice: Device) => {
     if (!selectedRack) return;
 
+    // Update both connected devices if there's a network connection change
+    const updatedDevices = updateConnectedDevices(
+      selectedRack.devices,
+      updatedDevice,
+      updatedDevice.networkAdapters[0]?.connectedToDevice || '',
+      updatedDevice.networkAdapters[0]?.id || '',
+      updatedDevice.networkAdapters[0]?.connected || false
+    );
+
     const updatedRack = {
       ...selectedRack,
-      devices: selectedRack.devices.map(device =>
-        device.id === updatedDevice.id ? updatedDevice : device
-      ),
+      devices: updatedDevices,
     };
 
     handleUpdateRack(updatedRack);
     setSelectedDevice(updatedDevice);
-
-    // Log the device update
-    const logEntry = {
-      id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      user: "admin",
-      action: "Updated",
-      itemType: "device",
-      itemId: updatedDevice.id,
-      itemName: updatedDevice.name,
-      changes: [],
-    };
-    localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex justify-between items-center px-4 py-2 border-b">
-        <MainNav />
-        <AddRackDialog onAddRack={handleAddRack} />
-      </div>
+      <MainNav />
       <div className="p-8">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-8 flex items-start gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {location.racks.map((rack) => (
                 <div
@@ -155,6 +107,9 @@ const Index = () => {
                   />
                 </div>
               ))}
+            </div>
+            <div className="mt-4">
+              <AddRackDialog onAddRack={handleAddRack} />
             </div>
           </div>
         </div>
