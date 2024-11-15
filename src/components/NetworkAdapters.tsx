@@ -33,18 +33,18 @@ const NetworkAdapters = ({
   currentDevice 
 }: NetworkAdaptersProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customConnection, setCustomConnection] = useState("");
 
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     if (!currentDevice) return;
-    
-    console.log("Toggling connection:", { id, targetDeviceId });
     
     const newAdapters = adapters.map(adapter =>
       adapter.id === id
         ? { 
             ...adapter, 
             connected: !adapter.connected,
-            connectedToDevice: !adapter.connected ? targetDeviceId : undefined
+            connectedToDevice: !adapter.connected ? targetDeviceId : undefined,
+            customConnection: targetDeviceId === "custom" ? customConnection : undefined
           }
         : adapter
     );
@@ -56,7 +56,8 @@ const NetworkAdapters = ({
       const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
       toast.success(
         `Port ${adapter.port} ${adapter.connected ? 'connected' : 'disconnected'}` +
-        (targetDevice ? ` ${adapter.connected ? 'to' : 'from'} ${targetDevice.name}` : '')
+        (targetDevice ? ` ${adapter.connected ? 'to' : 'from'} ${targetDevice.name}` : '') +
+        (adapter.customConnection ? ` to ${adapter.customConnection}` : '')
       );
     }
   };
@@ -116,7 +117,7 @@ const NetworkAdapters = ({
                 <div className="flex items-center space-x-2">
                   {adapter.connectedToDevice && (
                     <span className="text-sm text-muted-foreground">
-                      → {availableDevices.find(d => d.id === adapter.connectedToDevice)?.name || 'Custom'}
+                      → {adapter.customConnection || availableDevices.find(d => d.id === adapter.connectedToDevice)?.name || 'Custom'}
                     </span>
                   )}
                   <Button
@@ -130,7 +131,17 @@ const NetworkAdapters = ({
               ) : (
                 <div className="flex items-center space-x-2">
                   <Select
-                    onValueChange={(value) => toggleConnection(adapter.id, value)}
+                    onValueChange={(value) => {
+                      if (value === "custom") {
+                        const connection = window.prompt("Enter custom connection details:");
+                        if (connection) {
+                          setCustomConnection(connection);
+                          toggleConnection(adapter.id, "custom");
+                        }
+                      } else {
+                        toggleConnection(adapter.id, value);
+                      }
+                    }}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Connect to..." />

@@ -1,19 +1,21 @@
 import { Device, NetworkAdapter } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import NetworkAdapters from "./NetworkAdapters";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { logTransaction } from "@/lib/storage";
 
 interface DevicePanelProps {
   device: Device;
   onClose: () => void;
   onUpdate: (device: Device) => void;
+  onDelete?: (deviceId: string) => void;
   availableDevices: Device[];
 }
 
-const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePanelProps) => {
+const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: DevicePanelProps) => {
   const [currentDevice, setCurrentDevice] = useState(device);
 
   useEffect(() => {
@@ -34,14 +36,27 @@ const DevicePanel = ({ device, onClose, onUpdate, availableDevices }: DevicePane
     onUpdate(updatedDevice);
   };
 
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(device.id);
+      onClose();
+      toast.success("Device deleted successfully");
+    }
+  };
+
   return (
     <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">{currentDevice.name}</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="destructive" size="icon" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-6">

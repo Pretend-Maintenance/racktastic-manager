@@ -64,6 +64,16 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       return;
     }
 
+    // Create default network adapter if none exist
+    const defaultAdapter = {
+      id: crypto.randomUUID(),
+      name: "Network Port 1",
+      type: "ethernet" as const,
+      speed: "1Gbit",
+      port: "1",
+      connected: false
+    };
+
     const device: Device = {
       id: crypto.randomUUID(),
       name: newDevice.name,
@@ -72,7 +82,7 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       model: newDevice.model,
       height: newDevice.height || 1,
       position: newDevice.position || 1,
-      networkAdapters: newDevice.networkAdapters || [],
+      networkAdapters: newDevice.networkAdapters?.length ? newDevice.networkAdapters : [defaultAdapter],
       status: "inactive",
       assetReference: newDevice.assetReference
     };
