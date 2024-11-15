@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createDefaultAdapters } from "@/lib/storage";
 
 interface AddDeviceDialogProps {
   rack: Rack;
@@ -27,6 +28,7 @@ interface AddDeviceDialogProps {
 
 export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
   const [open, setOpen] = useState(false);
+  const [showTemplate, setShowTemplate] = useState(false);
   const [newDevice, setNewDevice] = useState<Partial<Device>>({
     name: "",
     type: "server",
@@ -37,6 +39,20 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
     networkAdapters: [],
     status: "inactive"
   });
+
+  const handleDeviceTypeChange = (type: DeviceType) => {
+    setNewDevice({ ...newDevice, type });
+    setShowTemplate(type === "switch" || type === "firewall");
+  };
+
+  const handleTemplateSelection = (template: string) => {
+    const adapters = createDefaultAdapters(template);
+    setNewDevice({ 
+      ...newDevice, 
+      networkAdapters: adapters,
+      model: template // Set the model to match the template name
+    });
+  };
 
   const handleAddDevice = () => {
     if (!newDevice.name || !newDevice.type || !newDevice.manufacturer || !newDevice.model) {
@@ -52,10 +68,15 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       model: newDevice.model,
       height: newDevice.height || 1,
       position: newDevice.position || 1,
-      networkAdapters: [],
+      networkAdapters: newDevice.networkAdapters || [],
       status: "inactive",
       assetReference: newDevice.assetReference
     };
+
+    // If no template was selected for switch/firewall, create default adapters
+    if ((device.type === "switch" || device.type === "firewall") && device.networkAdapters.length === 0) {
+      device.networkAdapters = createDefaultAdapters(device.type === "switch" ? "switch-4" : "firewall");
+    }
 
     onUpdateRack({
       ...rack,
@@ -103,7 +124,7 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
             <Label htmlFor="type">Device Type *</Label>
             <Select
               value={newDevice.type}
-              onValueChange={(value) => setNewDevice({ ...newDevice, type: value as DeviceType })}
+              onValueChange={(value) => handleDeviceTypeChange(value as DeviceType)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
@@ -117,6 +138,29 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
               </SelectContent>
             </Select>
           </div>
+
+          {showTemplate && (
+            <div>
+              <Label>Device Template</Label>
+              <Select onValueChange={handleTemplateSelection}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a template..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {newDevice.type === "switch" && (
+                    <>
+                      <SelectItem value="switch-4">Generic 4-Port Switch</SelectItem>
+                      <SelectItem value="switch-24">Generic 24-Port Switch</SelectItem>
+                    </>
+                  )}
+                  {newDevice.type === "firewall" && (
+                    <SelectItem value="firewall">Generic Firewall</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div>
             <Label htmlFor="manufacturer">Manufacturer *</Label>
             <Input
