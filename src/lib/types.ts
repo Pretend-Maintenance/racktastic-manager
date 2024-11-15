@@ -47,6 +47,14 @@ export interface LogEntry {
   itemType: "device" | "rack" | "networkAdapter";
   itemId: string;
   itemName: string;
+  deviceDetails?: {
+    type?: string;
+    manufacturer?: string;
+    model?: string;
+    status?: string;
+    position?: string;
+    height?: string;
+  };
   changes: {
     field: string;
     oldValue: string;

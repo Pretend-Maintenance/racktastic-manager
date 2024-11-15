@@ -1,11 +1,20 @@
-import { Location, Device, Rack, NetworkAdapter } from "./types";
+import { Location, Device, Rack, NetworkAdapter, LogEntry } from "./types";
 
 const STORAGE_KEY = "datacenter_state";
 const STATUS_KEY = "datacenter_status";
 
+const getDeviceDetails = (device: Device) => ({
+  type: device.type,
+  manufacturer: device.manufacturer,
+  model: device.model,
+  status: device.status,
+  position: `U${device.position}`,
+  height: `${device.height}U`,
+});
+
 // Enhanced logging function with detailed changes
-const logTransaction = (action: string, itemType: string, itemName: string, changes: any[] = []) => {
-  const logEntry = {
+const logTransaction = (action: string, itemType: string, itemName: string, changes: any[] = [], device?: Device) => {
+  const logEntry: LogEntry = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     user: "admin",
@@ -15,12 +24,15 @@ const logTransaction = (action: string, itemType: string, itemName: string, chan
     itemName,
     changes,
   };
+
+  if (device) {
+    logEntry.deviceDetails = getDeviceDetails(device);
+  }
   
   console.log("Logging transaction:", logEntry);
   localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
 };
 
-// Save both transaction log and current state
 export const saveState = (location: Location, action?: string, changes?: any[]) => {
   // Save current state
   localStorage.setItem(STATUS_KEY, JSON.stringify(location));
@@ -59,7 +71,6 @@ export const createDefaultAdapters = (deviceType: string): NetworkAdapter[] => {
   }
 };
 
-// Helper function to update connected devices
 export const updateConnectedDevices = (
   devices: Device[],
   sourceDevice: Device,
@@ -72,7 +83,7 @@ export const updateConnectedDevices = (
   return devices.map(device => {
     // Update source device
     if (device.id === sourceDevice.id) {
-      return {
+      const updatedDevice = {
         ...device,
         networkAdapters: device.networkAdapters.map(adapter => 
           adapter.id === adapterId ? {
@@ -82,11 +93,25 @@ export const updateConnectedDevices = (
           } : adapter
         )
       };
+      
+      // Log the changes for the source device
+      logTransaction(
+        connected ? "Connected" : "Disconnected",
+        "device",
+        device.name,
+        [{
+          field: "Network Connection",
+          oldValue: connected ? "Disconnected" : "Connected",
+          newValue: connected ? "Connected" : "Disconnected"
+        }],
+        updatedDevice
+      );
+      
+      return updatedDevice;
     }
     
     // Update target device
     if (device.id === targetDeviceId) {
-      // Find or create a corresponding network adapter in the target device
       const targetAdapter = device.networkAdapters.find(adapter => 
         adapter.connectedToDevice === sourceDevice.id
       ) || {
@@ -112,10 +137,25 @@ export const updateConnectedDevices = (
             connectedToDevice: connected ? sourceDevice.id : undefined
           }];
 
-      return {
+      const updatedDevice = {
         ...device,
         networkAdapters: updatedAdapters
       };
+
+      // Log the changes for the target device
+      logTransaction(
+        connected ? "Connected" : "Disconnected",
+        "device",
+        device.name,
+        [{
+          field: "Network Connection",
+          oldValue: connected ? "Disconnected" : "Connected",
+          newValue: connected ? "Connected" : "Disconnected"
+        }],
+        updatedDevice
+      );
+
+      return updatedDevice;
     }
     return device;
   });
