@@ -13,7 +13,7 @@ const getDeviceDetails = (device: Device) => ({
 });
 
 // Enhanced logging function with detailed changes
-const logTransaction = (action: string, itemType: string, itemName: string, changes: any[] = [], device?: Device) => {
+const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
   const logEntry: LogEntry = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
@@ -38,7 +38,7 @@ export const saveState = (location: Location, action?: string, changes?: any[]) 
   localStorage.setItem(STATUS_KEY, JSON.stringify(location));
   
   if (action) {
-    logTransaction(action, "location", location.name, changes);
+    logTransaction(action, "rack", location.name, changes);
   }
 };
 
