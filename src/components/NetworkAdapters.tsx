@@ -37,6 +37,8 @@ const NetworkAdapters = ({
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     if (!currentDevice) return;
     
+    console.log("Toggling connection:", { id, targetDeviceId });
+    
     const newAdapters = adapters.map(adapter =>
       adapter.id === id
         ? { 
