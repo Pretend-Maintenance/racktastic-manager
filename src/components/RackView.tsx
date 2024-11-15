@@ -17,13 +17,24 @@ interface RackViewProps {
 const RackView = ({ rack, onSelectDevice, onUpdateRack, onDeleteRack }: RackViewProps) => {
   const [draggedDevice, setDraggedDevice] = useState<Device | null>(null);
 
+  const handleDragStart = (device: Device) => {
+    console.log("Started dragging device:", device.name);
+    setDraggedDevice(device);
+  };
+
   const handleDrop = (position: number) => {
-    if (!draggedDevice) return;
+    if (!draggedDevice) {
+      console.log("No device being dragged");
+      return;
+    }
+
+    console.log("Attempting to drop device at position:", position);
 
     // Check if there's enough space for the device
     const canFit = isSlotAvailable(rack, position, draggedDevice.height, draggedDevice.id);
     
     if (!canFit) {
+      console.log("Cannot place device - insufficient space or overlap");
       toast.error("Cannot place device here - insufficient space or overlap with other devices");
       return;
     }
@@ -34,6 +45,7 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack, onDeleteRack }: RackView
         : d
     );
 
+    console.log("Updating rack with new device position");
     onUpdateRack({ ...rack, devices: newDevices });
     setDraggedDevice(null);
     toast.success("Device moved successfully");
@@ -55,6 +67,7 @@ const RackView = ({ rack, onSelectDevice, onUpdateRack, onDeleteRack }: RackView
           onDrop={handleDrop}
           onSelectDevice={onSelectDevice}
           isOccupied={isOccupied}
+          onDragStart={handleDragStart}
         />
       );
     }

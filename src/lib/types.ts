@@ -10,6 +10,7 @@ export interface NetworkAdapter {
   connectedToDevice?: string;
   ip?: string;
   vlan?: string;
+  customConnection?: string;
 }
 
 export interface Device {

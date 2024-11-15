@@ -7,6 +7,7 @@ interface RackSlotProps {
   onDrop: (position: number) => void;
   onSelectDevice: (device: Device) => void;
   isOccupied: boolean;
+  onDragStart: (device: Device) => void;
 }
 
 const getDeviceIcon = (type: Device["type"]) => {
@@ -24,11 +25,16 @@ const getDeviceIcon = (type: Device["type"]) => {
   }
 };
 
-export const RackSlot = ({ position, device, onDrop, onSelectDevice, isOccupied }: RackSlotProps) => {
+export const RackSlot = ({ position, device, onDrop, onSelectDevice, isOccupied, onDragStart }: RackSlotProps) => {
   const handleDragOver = (e: React.DragEvent) => {
     if (!isOccupied) {
       e.preventDefault();
     }
+  };
+
+  const handleDragStart = (e: React.DragEvent, device: Device) => {
+    console.log("Starting drag for device:", device.name);
+    onDragStart(device);
   };
 
   return (
@@ -46,6 +52,7 @@ export const RackSlot = ({ position, device, onDrop, onSelectDevice, isOccupied 
         <div
           className="absolute inset-0 flex items-center justify-center bg-opacity-90 text-white cursor-pointer"
           draggable
+          onDragStart={(e) => handleDragStart(e, device)}
           onClick={() => onSelectDevice(device)}
         >
           <div className="flex items-center space-x-2">

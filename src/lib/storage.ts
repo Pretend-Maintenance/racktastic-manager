@@ -12,8 +12,7 @@ const getDeviceDetails = (device: Device) => ({
   height: `${device.height}U`,
 });
 
-// Enhanced logging function with detailed changes
-const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
+export const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
   console.log("Logging transaction:", { action, itemType, itemName, changes, device });
   
   const logEntry: LogEntry = {
