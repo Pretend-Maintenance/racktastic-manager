@@ -93,7 +93,6 @@ const NetworkAdapters = ({
             <NetworkAdapterForm 
               onAdd={handleAddAdapter} 
               onClose={() => setIsDialogOpen(false)}
-              refreshPane={() => {}} // Add empty refreshPane function
             />
           </DialogContent>
         </Dialog>
