@@ -14,6 +14,8 @@ const getDeviceDetails = (device: Device) => ({
 
 // Enhanced logging function with detailed changes
 const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
+  console.log("Logging transaction:", { action, itemType, itemName, changes, device });
+  
   const logEntry: LogEntry = {
     id: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
@@ -29,27 +31,26 @@ const logTransaction = (action: string, itemType: "device" | "rack" | "networkAd
     logEntry.deviceDetails = getDeviceDetails(device);
   }
   
-  console.log("Logging transaction:", logEntry);
   localStorage.setItem(`log_${logEntry.id}`, JSON.stringify(logEntry));
 };
 
 export const saveState = (location: Location, action?: string, changes?: any[]) => {
-  // Save current state
   localStorage.setItem(STATUS_KEY, JSON.stringify(location));
   
   if (action) {
-    logTransaction(action, "rack", location.name, changes);
+    logTransaction(action, "rack", location.name, changes || []);
   }
 };
 
-// Load the current state
 export const loadState = (): Location | null => {
   const saved = localStorage.getItem(STATUS_KEY);
   return saved ? JSON.parse(saved) : null;
 };
 
-// Helper function to create network adapters based on device type
+// Enhanced network adapter creation based on templates
 export const createDefaultAdapters = (deviceType: string): NetworkAdapter[] => {
+  console.log("Creating default adapters for:", deviceType);
+  
   const createAdapter = (index: number): NetworkAdapter => ({
     id: crypto.randomUUID(),
     name: `Port ${index}`,
@@ -67,7 +68,7 @@ export const createDefaultAdapters = (deviceType: string): NetworkAdapter[] => {
     case "firewall":
       return Array.from({ length: 4 }, (_, i) => createAdapter(i + 1));
     default:
-      return [createAdapter(1)]; // Default single adapter for other devices
+      return [createAdapter(1)];
   }
 };
 
@@ -80,37 +81,35 @@ export const updateConnectedDevices = (
 ): Device[] => {
   console.log("Updating connected devices:", { sourceDevice, targetDeviceId, adapterId, connected });
   
-  return devices.map(device => {
-    // Update source device
-    if (device.id === sourceDevice.id) {
-      const updatedDevice = {
-        ...device,
-        networkAdapters: device.networkAdapters.map(adapter => 
-          adapter.id === adapterId ? {
-            ...adapter,
-            connected,
-            connectedToDevice: connected ? targetDeviceId : undefined
-          } : adapter
-        )
-      };
-      
-      // Log the changes for the source device
-      logTransaction(
-        connected ? "Connected" : "Disconnected",
-        "device",
-        device.name,
-        [{
-          field: "Network Connection",
-          oldValue: connected ? "Disconnected" : "Connected",
-          newValue: connected ? "Connected" : "Disconnected"
-        }],
-        updatedDevice
-      );
-      
-      return updatedDevice;
+  const changes = [
+    {
+      field: "Network Connection",
+      oldValue: connected ? "Disconnected" : "Connected",
+      newValue: connected ? "Connected" : "Disconnected"
     }
-    
-    // Update target device
+  ];
+
+  logTransaction(
+    connected ? "Connected" : "Disconnected",
+    "networkAdapter",
+    sourceDevice.name,
+    changes,
+    sourceDevice
+  );
+
+  return devices.map(device => {
+    if (device.id === sourceDevice.id) {
+      const updatedAdapters = device.networkAdapters.map(adapter =>
+        adapter.id === adapterId ? {
+          ...adapter,
+          connected,
+          connectedToDevice: connected ? targetDeviceId : undefined
+        } : adapter
+      );
+
+      return { ...device, networkAdapters: updatedAdapters };
+    }
+
     if (device.id === targetDeviceId) {
       const targetAdapter = device.networkAdapters.find(adapter => 
         adapter.connectedToDevice === sourceDevice.id
@@ -118,7 +117,7 @@ export const updateConnectedDevices = (
         id: crypto.randomUUID(),
         name: "Auto-created Connection",
         type: "ethernet",
-        speed: "1GbE",
+        speed: "1Gbit",
         port: "Auto",
         connected: false
       };
@@ -137,26 +136,9 @@ export const updateConnectedDevices = (
             connectedToDevice: connected ? sourceDevice.id : undefined
           }];
 
-      const updatedDevice = {
-        ...device,
-        networkAdapters: updatedAdapters
-      };
-
-      // Log the changes for the target device
-      logTransaction(
-        connected ? "Connected" : "Disconnected",
-        "device",
-        device.name,
-        [{
-          field: "Network Connection",
-          oldValue: connected ? "Disconnected" : "Connected",
-          newValue: connected ? "Connected" : "Disconnected"
-        }],
-        updatedDevice
-      );
-
-      return updatedDevice;
+      return { ...device, networkAdapters: updatedAdapters };
     }
+
     return device;
   });
 };

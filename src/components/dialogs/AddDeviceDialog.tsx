@@ -29,6 +29,7 @@ interface AddDeviceDialogProps {
 export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
   const [open, setOpen] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
   const [newDevice, setNewDevice] = useState<Partial<Device>>({
     name: "",
     type: "server",
@@ -43,14 +44,17 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
   const handleDeviceTypeChange = (type: DeviceType) => {
     setNewDevice({ ...newDevice, type });
     setShowTemplate(type === "switch" || type === "firewall");
+    setSelectedTemplate("");
   };
 
   const handleTemplateSelection = (template: string) => {
+    console.log("Selected template:", template);
     const adapters = createDefaultAdapters(template);
+    setSelectedTemplate(template);
     setNewDevice({ 
       ...newDevice, 
       networkAdapters: adapters,
-      model: template // Set the model to match the template name
+      model: template
     });
   };
 
@@ -73,16 +77,17 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       assetReference: newDevice.assetReference
     };
 
-    // If no template was selected for switch/firewall, create default adapters
+    // Create default adapters if no template was selected for switch/firewall
     if ((device.type === "switch" || device.type === "firewall") && device.networkAdapters.length === 0) {
       device.networkAdapters = createDefaultAdapters(device.type === "switch" ? "switch-4" : "firewall");
     }
 
-    onUpdateRack({
+    const updatedRack = {
       ...rack,
       devices: [...rack.devices, device]
-    });
+    };
 
+    onUpdateRack(updatedRack);
     setNewDevice({
       name: "",
       type: "server",
@@ -93,7 +98,7 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       networkAdapters: [],
       status: "inactive"
     });
-
+    setSelectedTemplate("");
     setOpen(false);
     toast.success("Device added successfully");
   };
@@ -142,19 +147,19 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
           {showTemplate && (
             <div>
               <Label>Device Template</Label>
-              <Select onValueChange={handleTemplateSelection}>
+              <Select value={selectedTemplate} onValueChange={handleTemplateSelection}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a template..." />
                 </SelectTrigger>
                 <SelectContent>
                   {newDevice.type === "switch" && (
                     <>
-                      <SelectItem value="switch-4">Generic 4-Port Switch</SelectItem>
-                      <SelectItem value="switch-24">Generic 24-Port Switch</SelectItem>
+                      <SelectItem value="switch-4">4-Port Switch</SelectItem>
+                      <SelectItem value="switch-24">24-Port Switch</SelectItem>
                     </>
                   )}
                   {newDevice.type === "firewall" && (
-                    <SelectItem value="firewall">Generic Firewall</SelectItem>
+                    <SelectItem value="firewall">Standard Firewall (4 ports)</SelectItem>
                   )}
                 </SelectContent>
               </Select>
