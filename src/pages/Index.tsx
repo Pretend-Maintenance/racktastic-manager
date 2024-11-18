@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Device, Rack, Location } from "@/lib/types";
+import { Device, Rack, Location, NetworkAdapter } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
