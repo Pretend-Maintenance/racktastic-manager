@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
-import { Device, Rack, Location, NetworkAdapter } from "@/lib/types";
+import { Device, Rack, Location } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
 import { AddRackDialog } from "@/components/AddRackDialog";
 import { saveState, loadState, updateConnectedDevices } from "@/lib/storage";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 
 const defaultLocation: Location = {
   id: "loc1",
@@ -87,25 +85,6 @@ const Index = () => {
     setSelectedDevice(updatedDevice);
   };
 
-  const handleBackupDownload = () => {
-    const backupData = {
-      location,
-      timestamp: new Date().toISOString(),
-      version: "1.0"
-    };
-
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `datacenter-backup-${new Date().toISOString()}.cfg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-    toast.success("Backup file downloaded successfully");
-  };
-
   useEffect(() => {
     const handleDeviceAdapterUpdate = (event: CustomEvent<{deviceId: string, adapters: NetworkAdapter[]}>) => {
       const { deviceId, adapters } = event.detail;
@@ -135,10 +114,6 @@ const Index = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Data Center Management</h1>
-            <Button onClick={handleBackupDownload} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Backup Configuration
-            </Button>
           </div>
           <div className="mb-8 flex items-start gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
