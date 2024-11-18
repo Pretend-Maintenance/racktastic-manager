@@ -1,14 +1,7 @@
 import { NetworkAdapter, Device } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Cable, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { NetworkAdapterForm } from "./NetworkAdapterForm";
+import { NetworkAdapterConnection } from "./NetworkAdapterConnection";
 import { useState } from "react";
+import { logTransaction } from "@/lib/storage";
 
 interface NetworkAdaptersProps {
   adapters: NetworkAdapter[];
@@ -48,34 +43,34 @@ const NetworkAdapters = ({
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     if (!currentDevice) return;
     
-    const newAdapters = adapters.map(adapter =>
-      adapter.id === id
+    const adapter = adapters.find(a => a.id === id);
+    if (!adapter) return;
+
+    const targetDevice = targetDeviceId ? availableDevices.find(d => d.id === targetDeviceId) : undefined;
+    
+    const newAdapters = adapters.map(a =>
+      a.id === id
         ? { 
-            ...adapter, 
-            connected: !adapter.connected,
-            connectedToDevice: !adapter.connected ? targetDeviceId : undefined,
+            ...a, 
+            connected: !a.connected,
+            connectedToDevice: !a.connected ? targetDeviceId : undefined,
             customConnection: targetDeviceId === "custom" ? customConnection : undefined
           }
-        : adapter
+        : a
     );
     
     onUpdate(newAdapters);
     
-    const adapter = newAdapters.find(a => a.id === id);
     if (adapter && adapter.connected && targetDeviceId && targetDeviceId !== "custom") {
-      // Find target device and ensure it has a connected adapter
-      const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
       if (targetDevice) {
         const hasConnectedAdapter = targetDevice.networkAdapters.some(
           a => a.connectedToDevice === currentDevice.id
         );
         
         if (!hasConnectedAdapter) {
-          // Create new adapter for target device
           const newTargetAdapter = createDefaultAdapter(currentDevice.id);
           const updatedAdapters = [...targetDevice.networkAdapters, newTargetAdapter];
           
-          // Dispatch event to update target device
           const updateEvent = new CustomEvent('updateDeviceAdapters', {
             detail: {
               deviceId: targetDevice.id,
@@ -84,19 +79,30 @@ const NetworkAdapters = ({
           });
           window.dispatchEvent(updateEvent);
           
-          toast.success(
-            `Created new network adapter on ${targetDevice.name} and connected to ${currentDevice.name}`
+          logTransaction(
+            "connected",
+            "networkAdapter",
+            `${adapter.name} (Port ${adapter.port})`,
+            [{
+              field: "Connection",
+              oldValue: "Disconnected",
+              newValue: `Connected to ${targetDevice.name} (Port ${newTargetAdapter.port})`
+            }],
+            currentDevice
           );
         }
       }
-    }
-    
-    if (adapter) {
-      const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
-      toast.success(
-        `Port ${adapter.port} ${adapter.connected ? 'connected' : 'disconnected'}` +
-        (targetDevice ? ` ${adapter.connected ? 'to' : 'from'} ${targetDevice.name}` : '') +
-        (adapter.customConnection ? ` to ${adapter.customConnection}` : '')
+    } else if (adapter) {
+      logTransaction(
+        "disconnected",
+        "networkAdapter",
+        `${adapter.name} (Port ${adapter.port})`,
+        [{
+          field: "Connection",
+          oldValue: `Connected to ${targetDevice?.name || adapter.customConnection || 'unknown'}`,
+          newValue: "Disconnected"
+        }],
+        currentDevice
       );
     }
   };
@@ -107,11 +113,47 @@ const NetworkAdapters = ({
       id: crypto.randomUUID(),
     };
     onUpdate([...adapters, adapter]);
+    
+    logTransaction(
+      "created",
+      "networkAdapter",
+      adapter.name,
+      [{
+        field: "Port",
+        oldValue: "",
+        newValue: adapter.port
+      }, {
+        field: "Type",
+        oldValue: "",
+        newValue: adapter.type
+      }, {
+        field: "Speed",
+        oldValue: "",
+        newValue: adapter.speed
+      }],
+      currentDevice
+    );
+    
     toast.success("Network adapter added successfully");
   };
 
   const handleRemoveAdapter = (id: string) => {
-    onUpdate(adapters.filter(adapter => adapter.id !== id));
+    const adapter = adapters.find(a => a.id === id);
+    if (adapter) {
+      logTransaction(
+        "deleted",
+        "networkAdapter",
+        adapter.name,
+        [{
+          field: "Port",
+          oldValue: adapter.port,
+          newValue: ""
+        }],
+        currentDevice
+      );
+    }
+    
+    onUpdate(adapters.filter(a => a.id !== id));
     toast.success("Network adapter removed");
   };
 
@@ -152,59 +194,15 @@ const NetworkAdapters = ({
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-muted-foreground">Port {adapter.port}</span>
-              {adapter.connected ? (
-                <div className="flex items-center space-x-2">
-                  {adapter.connectedToDevice && (
-                    <span className="text-sm text-muted-foreground">
-                      → {adapter.customConnection || availableDevices.find(d => d.id === adapter.connectedToDevice)?.name || 'Custom'}
-                    </span>
-                  )}
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => toggleConnection(adapter.id)}
-                  >
-                    <Cable className="w-4 h-4 text-white" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Select
-                    onValueChange={(value) => {
-                      if (value === "custom") {
-                        const connection = window.prompt("Enter custom connection details:");
-                        if (connection) {
-                          setCustomConnection(connection);
-                          toggleConnection(adapter.id, "custom");
-                        }
-                      } else {
-                        toggleConnection(adapter.id, value);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Connect to..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDevices
-                        .filter(device => device.id !== currentDevice?.id)
-                        .map(device => (
-                          <SelectItem key={device.id} value={device.id}>
-                            {device.name}
-                          </SelectItem>
-                        ))}
-                      <SelectItem value="custom">Custom Connection</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleRemoveAdapter(adapter.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
+              <NetworkAdapterConnection
+                adapter={adapter}
+                onToggleConnection={toggleConnection}
+                onRemoveAdapter={handleRemoveAdapter}
+                availableDevices={availableDevices}
+                currentDevice={currentDevice}
+                customConnection={customConnection}
+                setCustomConnection={setCustomConnection}
+              />
             </div>
           </div>
         ))}
