@@ -106,6 +106,28 @@ const Index = () => {
     toast.success("Backup file downloaded successfully");
   };
 
+  useEffect(() => {
+    const handleDeviceAdapterUpdate = (event: CustomEvent<{deviceId: string, adapters: NetworkAdapter[]}>) => {
+      const { deviceId, adapters } = event.detail;
+      const updatedRacks = location.racks.map(rack => ({
+        ...rack,
+        devices: rack.devices.map(device => 
+          device.id === deviceId
+            ? { ...device, networkAdapters: adapters }
+            : device
+        )
+      }));
+      
+      setLocation({ ...location, racks: updatedRacks });
+      saveState({ ...location, racks: updatedRacks });
+    };
+
+    window.addEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
+    return () => {
+      window.removeEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
+    };
+  }, [location]);
+
   return (
     <div className="min-h-screen bg-background">
       <MainNav />

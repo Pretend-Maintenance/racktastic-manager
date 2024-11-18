@@ -15,6 +15,11 @@ export function MainNav() {
             Transaction Logs
           </Link>
         </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to="/settings" className="px-4 py-2 hover:bg-accent rounded-md">
+            Settings
+          </Link>
+        </NavigationMenuItem>
       </NavigationMenuList>
     </NavigationMenu>
   )

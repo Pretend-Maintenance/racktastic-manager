@@ -35,6 +35,16 @@ const NetworkAdapters = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customConnection, setCustomConnection] = useState("");
 
+  const createDefaultAdapter = (deviceId: string): NetworkAdapter => ({
+    id: crypto.randomUUID(),
+    name: "Auto-created Port",
+    type: "ethernet",
+    speed: "1Gbit",
+    port: String(Math.max(...adapters.map(a => parseInt(a.port) || 0), 0) + 1),
+    connected: true,
+    connectedToDevice: deviceId
+  });
+
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     if (!currentDevice) return;
     
@@ -52,6 +62,35 @@ const NetworkAdapters = ({
     onUpdate(newAdapters);
     
     const adapter = newAdapters.find(a => a.id === id);
+    if (adapter && adapter.connected && targetDeviceId && targetDeviceId !== "custom") {
+      // Find target device and ensure it has a connected adapter
+      const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
+      if (targetDevice) {
+        const hasConnectedAdapter = targetDevice.networkAdapters.some(
+          a => a.connectedToDevice === currentDevice.id
+        );
+        
+        if (!hasConnectedAdapter) {
+          // Create new adapter for target device
+          const newTargetAdapter = createDefaultAdapter(currentDevice.id);
+          const updatedAdapters = [...targetDevice.networkAdapters, newTargetAdapter];
+          
+          // Dispatch event to update target device
+          const updateEvent = new CustomEvent('updateDeviceAdapters', {
+            detail: {
+              deviceId: targetDevice.id,
+              adapters: updatedAdapters
+            }
+          });
+          window.dispatchEvent(updateEvent);
+          
+          toast.success(
+            `Created new network adapter on ${targetDevice.name} and connected to ${currentDevice.name}`
+          );
+        }
+      }
+    }
+    
     if (adapter) {
       const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
       toast.success(
