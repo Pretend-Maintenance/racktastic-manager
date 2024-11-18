@@ -45,7 +45,7 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
   };
 
   return (
-    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto">
+    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto z-50">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">{currentDevice.name}</h2>
