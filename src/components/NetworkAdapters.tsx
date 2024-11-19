@@ -33,8 +33,8 @@ const NetworkAdapters = ({
   const createDefaultAdapter = (deviceId: string): NetworkAdapter => ({
     id: crypto.randomUUID(),
     name: "Auto-created Port",
-    type: "ethernet",
-    speed: "1Gbit",
+    type: currentDevice?.type === "storage" ? "fiber" : "ethernet",
+    speed: currentDevice?.type === "storage" ? "10Gbit" : "1Gbit",
     port: String(Math.max(...adapters.map(a => parseInt(a.port) || 0), 0) + 1),
     connected: true,
     connectedToDevice: deviceId
