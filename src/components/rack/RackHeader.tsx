@@ -57,23 +57,24 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Rack Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setShowAddDevice(true)}>
+          <DropdownMenuItem onSelect={() => setShowAddDevice(true)}>
             Add Device
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setIsEditingRack(true)}>
+          <DropdownMenuItem onSelect={() => setIsEditingRack(true)}>
             <Edit className="mr-2 h-4 w-4" />
             Edit Rack
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-red-600"
-            onClick={() => setShowDeleteConfirm(true)}
+            onSelect={() => setShowDeleteConfirm(true)}
           >
             Delete Rack
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Edit Rack Dialog */}
       <Dialog open={isEditingRack} onOpenChange={setIsEditingRack}>
         <DialogContent>
           <DialogHeader>
@@ -110,6 +111,7 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
         </DialogContent>
       </Dialog>
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>
@@ -129,6 +131,7 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
         </DialogContent>
       </Dialog>
 
+      {/* Add Device Dialog */}
       <Dialog open={showAddDevice} onOpenChange={setShowAddDevice}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
