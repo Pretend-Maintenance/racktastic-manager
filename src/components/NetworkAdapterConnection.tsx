@@ -45,6 +45,8 @@ export const NetworkAdapterConnection = ({
   const [pendingConnection, setPendingConnection] = useState<string | undefined>();
 
   const handleConnectionAttempt = (targetDeviceId: string) => {
+    console.log("Attempting connection to device:", targetDeviceId);
+    
     if (targetDeviceId === "custom") {
       const connection = window.prompt("Enter custom connection details:");
       if (connection) {
@@ -61,7 +63,22 @@ export const NetworkAdapterConnection = ({
     const freePort = targetDevice.networkAdapters.find(a => !a.connected);
     
     if (freePort) {
+      console.log("Found free port:", freePort.port, "on device:", targetDevice.name);
       onToggleConnection(adapter.id, targetDeviceId);
+      
+      // Update the target device's port
+      const updateEvent = new CustomEvent('updateDeviceAdapters', {
+        detail: {
+          deviceId: targetDevice.id,
+          adapters: targetDevice.networkAdapters.map(a =>
+            a.id === freePort.id
+              ? { ...a, connected: true, connectedToDevice: currentDevice?.id }
+              : a
+          )
+        }
+      });
+      window.dispatchEvent(updateEvent);
+      
       logTransaction(
         "connected",
         "networkAdapter",
@@ -74,6 +91,7 @@ export const NetworkAdapterConnection = ({
         currentDevice
       );
     } else {
+      console.log("No free ports available on target device:", targetDevice.name);
       setPendingConnection(targetDeviceId);
       setShowCreatePortDialog(true);
     }

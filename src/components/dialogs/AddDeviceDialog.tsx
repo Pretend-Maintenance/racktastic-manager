@@ -24,9 +24,10 @@ import { createDefaultAdapters } from "@/lib/storage";
 interface AddDeviceDialogProps {
   rack: Rack;
   onUpdateRack: (rack: Rack) => void;
+  onClose?: () => void;
 }
 
-export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
+export function AddDeviceDialog({ rack, onUpdateRack, onClose }: AddDeviceDialogProps) {
   const [open, setOpen] = useState(false);
   const [showTemplate, setShowTemplate] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
@@ -109,7 +110,7 @@ export function AddDeviceDialog({ rack, onUpdateRack }: AddDeviceDialogProps) {
       status: "inactive"
     });
     setSelectedTemplate("");
-    setOpen(false);
+    onClose?.();
     toast.success("Device added successfully");
   };
 

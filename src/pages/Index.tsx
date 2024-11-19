@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Device, Rack, Location, NetworkAdapter } from "@/lib/types";
+import { Device, Rack, Location } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
@@ -103,7 +103,6 @@ const Index = () => {
   const handleUpdateDevice = (updatedDevice: Device) => {
     if (!selectedRack) return;
 
-    // Update both connected devices if there's a network connection change
     const updatedDevices = updateConnectedDevices(
       selectedRack.devices,
       updatedDevice,
@@ -120,6 +119,16 @@ const Index = () => {
     handleUpdateRack(updatedRack);
     setSelectedDevice(updatedDevice);
   };
+
+  // Group racks by location
+  const groupedRacks = location.racks.reduce((groups: { [key: string]: Rack[] }, rack) => {
+    const location = rack.location || 'Unspecified';
+    if (!groups[location]) {
+      groups[location] = [];
+    }
+    groups[location].push(rack);
+    return groups;
+  }, {});
 
   useEffect(() => {
     const handleDeviceAdapterUpdate = (event: CustomEvent<{deviceId: string, adapters: NetworkAdapter[]}>) => {
@@ -151,23 +160,28 @@ const Index = () => {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Data Center Management</h1>
           </div>
-          <div className="mb-8 flex items-start gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {location.racks.map((rack) => (
-                <div
-                  key={rack.id}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedRack(rack)}
-                >
-                  <RackView
-                    rack={rack}
-                    onSelectDevice={setSelectedDevice}
-                    onUpdateRack={handleUpdateRack}
-                    onDeleteRack={handleDeleteRack}
-                  />
+          <div className="mb-8 space-y-8">
+            {Object.entries(groupedRacks).map(([locationName, racks]) => (
+              <div key={locationName} className="space-y-4">
+                <h2 className="text-xl font-semibold">{locationName}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {racks.map((rack) => (
+                    <div
+                      key={rack.id}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedRack(rack)}
+                    >
+                      <RackView
+                        rack={rack}
+                        onSelectDevice={setSelectedDevice}
+                        onUpdateRack={handleUpdateRack}
+                        onDeleteRack={handleDeleteRack}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
             <div className="mt-4">
               <AddRackDialog onAddRack={handleAddRack} />
             </div>

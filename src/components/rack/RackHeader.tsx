@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Rack } from "@/lib/types";
-import { Plus, Edit, Trash2, MoreVertical, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Edit, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -41,12 +41,6 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
     toast.success("Rack updated successfully");
   };
 
-  const handleDeleteRack = () => {
-    onDeleteRack(rack.id);
-    setShowDeleteConfirm(false);
-    toast.success("Rack deleted successfully");
-  };
-
   return (
     <div className="flex justify-between items-center">
       <div className="space-y-2">
@@ -64,7 +58,6 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
           <DropdownMenuLabel>Rack Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setShowAddDevice(true)}>
-            <Plus className="mr-2 h-4 w-4" />
             Add Device
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setIsEditingRack(true)}>
@@ -72,14 +65,11 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
             Edit Rack
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel>Rack Information</DropdownMenuLabel>
-          <DropdownMenuItem>
-            <Info className="mr-2 h-4 w-4" />
-            Total U: {rack.totalU}
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Info className="mr-2 h-4 w-4" />
-            Devices: {rack.devices.length}
+          <DropdownMenuItem
+            className="text-red-600"
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            Delete Rack
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -115,16 +105,7 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
                 onChange={(e) => setEditedRack({ ...editedRack, totalU: parseInt(e.target.value) })}
               />
             </div>
-            <div className="flex justify-between">
-              <Button onClick={handleUpdateRack}>Save Changes</Button>
-              <Button 
-                variant="destructive"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete Rack
-              </Button>
-            </div>
+            <Button onClick={handleUpdateRack}>Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -141,19 +122,25 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
             <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteRack}>
+            <Button variant="destructive" onClick={() => onDeleteRack(rack.id)}>
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {showAddDevice && (
-        <AddDeviceDialog 
-          rack={rack} 
-          onUpdateRack={onUpdateRack}
-        />
-      )}
+      <Dialog open={showAddDevice} onOpenChange={setShowAddDevice}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add Device</DialogTitle>
+          </DialogHeader>
+          <AddDeviceDialog 
+            rack={rack} 
+            onUpdateRack={onUpdateRack}
+            onClose={() => setShowAddDevice(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
