@@ -24,14 +24,16 @@ interface AddRackDialogProps {
   existingLocations: string[];
 }
 
-export function AddRackDialog({ onAddRack, existingLocations }: AddRackDialogProps) {
+export function AddRackDialog({ onAddRack, existingLocations = [] }: AddRackDialogProps) {
   const [open, setOpen] = useState(false);
   const [newRack, setNewRack] = useState<Partial<Rack>>({
     name: "",
     location: "",
     totalU: 42,
   });
-  const [locationType, setLocationType] = useState<"existing" | "new">("existing");
+  const [locationType, setLocationType] = useState<"existing" | "new">(
+    existingLocations.length > 0 ? "existing" : "new"
+  );
 
   const handleAddRack = () => {
     if (!newRack.name || !newRack.location) return;
@@ -72,28 +74,30 @@ export function AddRackDialog({ onAddRack, existingLocations }: AddRackDialogPro
             />
           </div>
           
-          <div className="space-y-2">
-            <Label>Location Type</Label>
-            <Select
-              value={locationType}
-              onValueChange={(value: "existing" | "new") => {
-                setLocationType(value);
-                if (value === "new") {
-                  setNewRack(prev => ({ ...prev, location: "" }));
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select location type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="existing">Use Existing Location</SelectItem>
-                <SelectItem value="new">Create New Location</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {existingLocations.length > 0 && (
+            <div className="space-y-2">
+              <Label>Location Type</Label>
+              <Select
+                value={locationType}
+                onValueChange={(value: "existing" | "new") => {
+                  setLocationType(value);
+                  if (value === "new") {
+                    setNewRack(prev => ({ ...prev, location: "" }));
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select location type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="existing">Use Existing Location</SelectItem>
+                  <SelectItem value="new">Create New Location</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          {locationType === "existing" && existingLocations.length > 0 ? (
+          {(locationType === "existing" && existingLocations.length > 0) ? (
             <div>
               <Label>Select Location</Label>
               <Select

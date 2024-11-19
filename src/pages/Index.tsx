@@ -143,6 +143,9 @@ const Index = () => {
     };
   }, [location]);
 
+  // Get unique existing locations
+  const existingLocations = Array.from(new Set(location.racks.map(rack => rack.location)));
+
   // Group racks by location
   const groupedRacks = location.racks.reduce((groups: { [key: string]: Rack[] }, rack) => {
     const location = rack.location || 'Unspecified';
@@ -174,7 +177,10 @@ const Index = () => {
               />
             ))}
             <div className="mt-4">
-              <AddRackDialog onAddRack={handleAddRack} />
+              <AddRackDialog 
+                onAddRack={handleAddRack} 
+                existingLocations={existingLocations}
+              />
             </div>
           </div>
         </div>
