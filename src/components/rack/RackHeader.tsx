@@ -148,10 +148,12 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
         </DialogContent>
       </Dialog>
 
-      <AddDeviceDialog 
-        rack={rack} 
-        onUpdateRack={onUpdateRack} 
-      />
+      {showAddDevice && (
+        <AddDeviceDialog 
+          rack={rack} 
+          onUpdateRack={onUpdateRack}
+        />
+      )}
     </div>
   );
 };

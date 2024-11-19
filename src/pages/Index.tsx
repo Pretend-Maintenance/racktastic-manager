@@ -5,7 +5,7 @@ import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
 import { AddRackDialog } from "@/components/AddRackDialog";
-import { saveState, loadState, updateConnectedDevices } from "@/lib/storage";
+import { saveState, loadState, updateConnectedDevices, logTransaction } from "@/lib/storage";
 
 const defaultLocation: Location = {
   id: "loc1",
@@ -39,8 +39,23 @@ const Index = () => {
   };
 
   const handleDeleteRack = (rackId: string) => {
+    const rackToDelete = location.racks.find(rack => rack.id === rackId);
+    if (!rackToDelete) return;
+
     const newRacks = location.racks.filter(rack => rack.id !== rackId);
     const newLocation = { ...location, racks: newRacks };
+    
+    logTransaction(
+      "deleted",
+      "rack",
+      rackToDelete.name,
+      [{
+        field: "Rack",
+        oldValue: rackToDelete.name,
+        newValue: ""
+      }]
+    );
+
     setLocation(newLocation);
     setSelectedRack(newRacks[0] || null);
     saveState(newLocation);
@@ -57,6 +72,27 @@ const Index = () => {
       ...location,
       racks: [...location.racks, newRack],
     };
+    
+    logTransaction(
+      "created",
+      "rack",
+      newRack.name,
+      [{
+        field: "Rack",
+        oldValue: "",
+        newValue: newRack.name
+      },
+      {
+        field: "Location",
+        oldValue: "",
+        newValue: newRack.location
+      },
+      {
+        field: "Total U",
+        oldValue: "",
+        newValue: newRack.totalU.toString()
+      }]
+    );
     
     setLocation(newLocation);
     setSelectedRack(newRack);
