@@ -39,7 +39,7 @@ export function AddDeviceDialog({ rack, onUpdateRack, onClose }: AddDeviceDialog
     height: 1,
     position: 1,
     networkAdapters: [],
-    status: "inactive"
+    status: "active" // Changed default status to active
   });
 
   const handleDeviceTypeChange = (type: DeviceType) => {

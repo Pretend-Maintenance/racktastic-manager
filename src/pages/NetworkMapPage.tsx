@@ -1,19 +1,80 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Device, Location } from "@/lib/types";
 import { loadState } from "@/lib/storage";
 import { MainNav } from "@/components/MainNav";
-import { NetworkDeviceNode } from "@/components/network-map/NetworkDeviceNode";
 
 const NetworkMapPage = () => {
   const [location, setLocation] = useState<Location | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const savedState = loadState();
     if (savedState) {
       setLocation(savedState);
-      console.log("Loaded network map state:", savedState);
     }
   }, []);
+
+  useEffect(() => {
+    if (!location || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size
+    canvas.width = window.innerWidth - 100;
+    canvas.height = window.innerHeight - 200;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const devices = location.racks.flatMap(rack => rack.devices);
+    const positions: { [key: string]: { x: number, y: number } } = {};
+
+    // Calculate positions (simple grid layout)
+    devices.forEach((device, index) => {
+      const cols = Math.ceil(Math.sqrt(devices.length));
+      const x = (index % cols) * 200 + 100;
+      const y = Math.floor(index / cols) * 150 + 100;
+      positions[device.id] = { x, y };
+
+      // Draw device node
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(x - 80, y - 30, 160, 60);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(device.name, x, y);
+      ctx.fillText(`${device.type}`, x, y + 20);
+    });
+
+    // Draw connections
+    ctx.strokeStyle = '#4b5563';
+    ctx.lineWidth = 2;
+
+    devices.forEach(device => {
+      device.networkAdapters.forEach(adapter => {
+        if (adapter.connected && adapter.connectedToDevice) {
+          const targetDevice = devices.find(d => d.id === adapter.connectedToDevice);
+          if (targetDevice) {
+            const sourcePos = positions[device.id];
+            const targetPos = positions[targetDevice.id];
+
+            ctx.beginPath();
+            ctx.moveTo(sourcePos.x, sourcePos.y);
+            ctx.lineTo(targetPos.x, targetPos.y);
+            ctx.stroke();
+
+            // Draw port labels
+            const midX = (sourcePos.x + targetPos.x) / 2;
+            const midY = (sourcePos.y + targetPos.y) / 2;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`Port ${adapter.port}`, midX, midY);
+          }
+        }
+      });
+    });
+  }, [location]);
 
   if (!location) return null;
 
@@ -21,20 +82,14 @@ const NetworkMapPage = () => {
     <div className="min-h-screen bg-background">
       <MainNav />
       <div className="p-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-[1600px] mx-auto">
           <h1 className="text-2xl font-bold mb-6">Network Connection Map</h1>
           <div className="bg-card rounded-lg p-6 border">
-            <div className="flex flex-wrap gap-8">
-              {location.racks.flatMap(rack => 
-                rack.devices.map(device => (
-                  <NetworkDeviceNode 
-                    key={device.id} 
-                    device={device}
-                    connectedDevices={location.racks.flatMap(r => r.devices)}
-                  />
-                ))
-              )}
-            </div>
+            <canvas
+              ref={canvasRef}
+              className="w-full"
+              style={{ minHeight: '600px' }}
+            />
           </div>
         </div>
       </div>
