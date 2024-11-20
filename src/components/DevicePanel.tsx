@@ -4,7 +4,7 @@ import { X, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import NetworkAdapters from "./NetworkAdapters";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { logTransaction } from "@/lib/storage";
 
 interface DevicePanelProps {
@@ -17,10 +17,24 @@ interface DevicePanelProps {
 
 const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: DevicePanelProps) => {
   const [currentDevice, setCurrentDevice] = useState(device);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setCurrentDevice(device);
   }, [device]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [onClose]);
 
   const handleStatusChange = (enabled: boolean) => {
     const newStatus = enabled ? 'active' as const : 'inactive' as const;
@@ -45,7 +59,7 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
   };
 
   return (
-    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto z-50">
+    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto z-50" ref={panelRef}>
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">{currentDevice.name}</h2>

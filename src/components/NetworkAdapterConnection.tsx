@@ -70,19 +70,15 @@ export const NetworkAdapterConnection = ({
     const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
     if (!targetDevice) return;
 
-    // Find the previously used port if it exists and is free
-    const previousPort = targetDevice.networkAdapters.find(
-      a => a.connectedToDevice === currentDevice?.id && !a.connected
-    );
-    
-    // Find any free port if previous port isn't available
-    const freePort = previousPort || targetDevice.networkAdapters.find(a => !a.connected);
+    // Find any free port on the target device
+    const freePort = targetDevice.networkAdapters.find(a => !a.connected);
     
     if (freePort) {
       console.log("Found port:", freePort.port, "on device:", targetDevice.name);
       setSelectedDevice(targetDeviceId);
       onToggleConnection(adapter.id, targetDeviceId);
       
+      // Update both devices' states
       const updateEvent = new CustomEvent('updateDeviceAdapters', {
         detail: {
           deviceId: targetDevice.id,
