@@ -25,8 +25,9 @@ const NetworkMapPage = () => {
     canvas.width = window.innerWidth - 100;
     canvas.height = window.innerHeight - 200;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas with a light gray background
+    ctx.fillStyle = '#f3f4f6'; // Tailwind gray-100
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const devices = location.racks.flatMap(rack => rack.devices);
     const positions: { [key: string]: { x: number, y: number } } = {};
@@ -38,7 +39,9 @@ const NetworkMapPage = () => {
       const y = Math.floor(index / cols) * 150 + 100;
       positions[device.id] = { x, y };
 
-      // Draw device node
+      // Draw device node with a white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x - 82, y - 32, 164, 64); // Slightly larger white background
       ctx.fillStyle = '#1f2937';
       ctx.fillRect(x - 80, y - 30, 160, 60);
       ctx.fillStyle = '#ffffff';
@@ -48,7 +51,7 @@ const NetworkMapPage = () => {
       ctx.fillText(`${device.type}`, x, y + 20);
     });
 
-    // Draw connections
+    // Draw connections with improved text visibility
     ctx.strokeStyle = '#4b5563';
     ctx.lineWidth = 2;
 
@@ -65,11 +68,23 @@ const NetworkMapPage = () => {
             ctx.lineTo(targetPos.x, targetPos.y);
             ctx.stroke();
 
-            // Draw port labels
+            // Draw white background for port text
             const midX = (sourcePos.x + targetPos.x) / 2;
             const midY = (sourcePos.y + targetPos.y) / 2;
+            const portText = `Port ${adapter.port}`;
+            const textMetrics = ctx.measureText(portText);
+            
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(`Port ${adapter.port}`, midX, midY);
+            ctx.fillRect(
+              midX - textMetrics.width/2 - 4,
+              midY - 10,
+              textMetrics.width + 8,
+              20
+            );
+            
+            // Draw port text
+            ctx.fillStyle = '#000000';
+            ctx.fillText(portText, midX, midY);
           }
         }
       });

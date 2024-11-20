@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Device, Rack, Location, NetworkAdapter } from "@/lib/types";
+import { Device, Rack, Location } from "@/lib/types";
 import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
-import { AddRackDialog } from "@/components/AddRackDialog";
-import { saveState, loadState, updateConnectedDevices, logTransaction } from "@/lib/storage";
+import { saveState, loadState, logTransaction } from "@/lib/storage";
 import { RackGroup } from "@/components/rack/RackGroup";
 
 const defaultLocation: Location = {
@@ -30,13 +29,30 @@ const Index = () => {
   }, []);
 
   const handleUpdateRack = (updatedRack: Rack) => {
-    const newRacks = location.racks.map(rack =>
-      rack.id === updatedRack.id ? updatedRack : rack
-    );
+    console.log("Updating rack:", updatedRack);
+    
+    const existingRackIndex = location.racks.findIndex(rack => rack.id === updatedRack.id);
+    let newRacks: Rack[];
+    
+    if (existingRackIndex === -1) {
+      // This is a new rack
+      newRacks = [...location.racks, updatedRack];
+      console.log("Adding new rack to location");
+    } else {
+      // This is an update to an existing rack
+      newRacks = location.racks.map(rack =>
+        rack.id === updatedRack.id ? updatedRack : rack
+      );
+      console.log("Updating existing rack");
+    }
+
     const newLocation = { ...location, racks: newRacks };
+    console.log("New location state:", newLocation);
+    
     setLocation(newLocation);
     setSelectedRack(updatedRack);
     saveState(newLocation);
+    toast.success(existingRackIndex === -1 ? "Rack added successfully" : "Rack updated successfully");
   };
 
   const handleDeleteRack = (rackId: string) => {
@@ -60,91 +76,8 @@ const Index = () => {
     setLocation(newLocation);
     setSelectedRack(newRacks[0] || null);
     saveState(newLocation);
+    toast.success("Rack deleted successfully");
   };
-
-  const handleAddRack = (rackData: Omit<Rack, "id" | "devices">) => {
-    const newRack: Rack = {
-      id: crypto.randomUUID(),
-      ...rackData,
-      devices: [],
-    };
-
-    const newLocation = {
-      ...location,
-      racks: [...location.racks, newRack],
-    };
-    
-    logTransaction(
-      "created",
-      "rack",
-      newRack.name,
-      [{
-        field: "Rack",
-        oldValue: "",
-        newValue: newRack.name
-      },
-      {
-        field: "Location",
-        oldValue: "",
-        newValue: newRack.location
-      },
-      {
-        field: "Total U",
-        oldValue: "",
-        newValue: newRack.totalU.toString()
-      }]
-    );
-    
-    setLocation(newLocation);
-    setSelectedRack(newRack);
-    saveState(newLocation);
-    toast.success("Rack added successfully");
-  };
-
-  const handleUpdateDevice = (updatedDevice: Device) => {
-    if (!selectedRack) return;
-
-    const updatedDevices = updateConnectedDevices(
-      selectedRack.devices,
-      updatedDevice,
-      updatedDevice.networkAdapters[0]?.connectedToDevice || '',
-      updatedDevice.networkAdapters[0]?.id || '',
-      updatedDevice.networkAdapters[0]?.connected || false
-    );
-
-    const updatedRack = {
-      ...selectedRack,
-      devices: updatedDevices,
-    };
-
-    handleUpdateRack(updatedRack);
-    setSelectedDevice(updatedDevice);
-  };
-
-  useEffect(() => {
-    const handleDeviceAdapterUpdate = (event: CustomEvent<{deviceId: string, adapters: NetworkAdapter[]}>) => {
-      const { deviceId, adapters } = event.detail;
-      const updatedRacks = location.racks.map(rack => ({
-        ...rack,
-        devices: rack.devices.map(device => 
-          device.id === deviceId
-            ? { ...device, networkAdapters: adapters }
-            : device
-        )
-      }));
-      
-      setLocation({ ...location, racks: updatedRacks });
-      saveState({ ...location, racks: updatedRacks });
-    };
-
-    window.addEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
-    return () => {
-      window.removeEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
-    };
-  }, [location]);
-
-  // Get unique existing locations
-  const existingLocations = Array.from(new Set(location.racks.map(rack => rack.location)));
 
   // Group racks by location
   const groupedRacks = location.racks.reduce((groups: { [key: string]: Rack[] }, rack) => {
@@ -176,12 +109,6 @@ const Index = () => {
                 onDeleteRack={handleDeleteRack}
               />
             ))}
-            <div className="mt-4">
-              <AddRackDialog 
-                onAddRack={handleAddRack} 
-                existingLocations={existingLocations}
-              />
-            </div>
           </div>
         </div>
       </div>
