@@ -19,6 +19,13 @@ import { findNextFreePort } from "./network-adapters/portUtils";
 import { AdapterList } from "./network-adapters/AdapterList";
 import { AdapterHeader } from "./network-adapters/AdapterHeader";
 
+interface NetworkAdaptersProps {
+  adapters: NetworkAdapter[];
+  onUpdate: (adapters: NetworkAdapter[]) => void;
+  availableDevices?: Device[];
+  currentDevice?: Device;
+}
+
 const NetworkAdapters = ({ 
   adapters, 
   onUpdate, 
@@ -27,6 +34,57 @@ const NetworkAdapters = ({
 }: NetworkAdaptersProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customConnection, setCustomConnection] = useState("");
+
+  const handleAddAdapter = (adapter: Omit<NetworkAdapter, "id">) => {
+    const newAdapter: NetworkAdapter = {
+      ...adapter,
+      id: crypto.randomUUID(),
+      port: String(adapters.length + 1)
+    };
+
+    const updatedAdapters = [...adapters, newAdapter];
+    onUpdate(updatedAdapters);
+
+    if (currentDevice) {
+      logTransaction(
+        "created",
+        "networkAdapter",
+        newAdapter.name,
+        [{
+          field: "Network Adapter",
+          oldValue: "",
+          newValue: `${newAdapter.name} (${newAdapter.type})`
+        }],
+        currentDevice
+      );
+    }
+
+    toast.success("Network adapter added successfully");
+  };
+
+  const handleRemoveAdapter = (id: string) => {
+    const adapter = adapters.find(a => a.id === id);
+    if (!adapter) return;
+
+    const updatedAdapters = adapters.filter(a => a.id !== id);
+    onUpdate(updatedAdapters);
+
+    if (currentDevice) {
+      logTransaction(
+        "deleted",
+        "networkAdapter",
+        adapter.name,
+        [{
+          field: "Network Adapter",
+          oldValue: `${adapter.name} (${adapter.type})`,
+          newValue: ""
+        }],
+        currentDevice
+      );
+    }
+
+    toast.success("Network adapter removed successfully");
+  };
 
   const toggleConnection = (id: string, targetDeviceId?: string) => {
     if (!currentDevice) return;
