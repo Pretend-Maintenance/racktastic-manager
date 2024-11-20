@@ -66,6 +66,24 @@ const NetworkAdapters = ({
     const adapter = adapters.find(a => a.id === id);
     if (!adapter) return;
 
+    // If the adapter is connected, we need to disconnect it from the target device
+    if (adapter.connected && adapter.connectedToDevice) {
+      const targetDevice = availableDevices?.find(d => d.id === adapter.connectedToDevice);
+      if (targetDevice) {
+        const updateEvent = new CustomEvent('updateDeviceAdapters', {
+          detail: {
+            deviceId: targetDevice.id,
+            adapters: targetDevice.networkAdapters.map(a => 
+              a.connectedToDevice === currentDevice?.id 
+                ? { ...a, connected: false, connectedToDevice: undefined }
+                : a
+            )
+          }
+        });
+        window.dispatchEvent(updateEvent);
+      }
+    }
+
     const updatedAdapters = adapters.filter(a => a.id !== id);
     onUpdate(updatedAdapters);
 
@@ -92,76 +110,100 @@ const NetworkAdapters = ({
     const adapter = adapters.find(a => a.id === id);
     if (!adapter) return;
 
+    console.log("Toggling connection:", { 
+      sourceDevice: currentDevice.name, 
+      sourceAdapter: adapter.name,
+      targetDeviceId 
+    });
+
     const targetDevice = targetDeviceId ? availableDevices.find(d => d.id === targetDeviceId) : undefined;
     
-    const newAdapters = adapters.map(a =>
-      a.id === id
-        ? { 
-            ...a, 
-            connected: !a.connected,
-            connectedToDevice: !a.connected ? targetDeviceId : undefined,
-            customConnection: targetDeviceId === "custom" ? customConnection : undefined
-          }
-        : a
-    );
-    
-    onUpdate(newAdapters);
-    
-    if (adapter && adapter.connected && targetDeviceId && targetDeviceId !== "custom") {
-      if (targetDevice) {
-        const existingConnection = targetDevice.networkAdapters.find(
-          a => a.connectedToDevice === currentDevice.id
-        );
-        
-        if (!existingConnection) {
-          const nextFreePort = findNextFreePort(targetDevice.networkAdapters);
-          const updatedAdapters = [...targetDevice.networkAdapters];
-          
-          if (nextFreePort) {
-            // Update existing free port
-            const freePortIndex = updatedAdapters.findIndex(a => a.port === nextFreePort);
-            if (freePortIndex !== -1) {
-              updatedAdapters[freePortIndex] = {
-                ...updatedAdapters[freePortIndex],
-                connected: true,
-                connectedToDevice: currentDevice.id
-              };
-            }
-          }
-          
+    // If we're disconnecting
+    if (adapter.connected) {
+      console.log("Disconnecting devices");
+      
+      // Update source adapter
+      const newAdapters = adapters.map(a =>
+        a.id === id ? { ...a, connected: false, connectedToDevice: undefined } : a
+      );
+      onUpdate(newAdapters);
+
+      // Update target device if it exists
+      if (adapter.connectedToDevice && adapter.connectedToDevice !== "custom") {
+        const targetDevice = availableDevices.find(d => d.id === adapter.connectedToDevice);
+        if (targetDevice) {
+          console.log("Updating target device:", targetDevice.name);
           const updateEvent = new CustomEvent('updateDeviceAdapters', {
             detail: {
               deviceId: targetDevice.id,
-              adapters: updatedAdapters
+              adapters: targetDevice.networkAdapters.map(a => 
+                a.connectedToDevice === currentDevice.id 
+                  ? { ...a, connected: false, connectedToDevice: undefined }
+                  : a
+              )
             }
           });
           window.dispatchEvent(updateEvent);
-          
-          logTransaction(
-            "connected",
-            "networkAdapter",
-            `${adapter.name} (Port ${adapter.port})`,
-            [{
-              field: "Connection",
-              oldValue: "Disconnected",
-              newValue: `Connected to ${targetDevice.name} (Port ${nextFreePort})`
-            }],
-            currentDevice
-          );
         }
       }
-    } else if (adapter) {
-      logTransaction(
-        "disconnected",
-        "networkAdapter",
-        `${adapter.name} (Port ${adapter.port})`,
-        [{
-          field: "Connection",
-          oldValue: `Connected to ${targetDevice?.name || adapter.customConnection || 'unknown'}`,
-          newValue: "Disconnected"
-        }],
-        currentDevice
-      );
+    } 
+    // If we're connecting
+    else if (targetDeviceId) {
+      console.log("Connecting devices");
+      
+      // Handle custom connections
+      if (targetDeviceId === "custom") {
+        const newAdapters = adapters.map(a =>
+          a.id === id ? { 
+            ...a, 
+            connected: true,
+            connectedToDevice: "custom",
+            customConnection: customConnection 
+          } : a
+        );
+        onUpdate(newAdapters);
+        return;
+      }
+
+      // Handle device-to-device connections
+      if (targetDevice) {
+        console.log("Found target device:", targetDevice.name);
+        const nextFreePort = findNextFreePort(targetDevice.networkAdapters);
+        
+        if (nextFreePort) {
+          console.log("Found free port on target device:", nextFreePort);
+          
+          // Update source adapter
+          const newAdapters = adapters.map(a =>
+            a.id === id ? { 
+              ...a, 
+              connected: true,
+              connectedToDevice: targetDeviceId 
+            } : a
+          );
+          onUpdate(newAdapters);
+
+          // Update target device
+          const updateEvent = new CustomEvent('updateDeviceAdapters', {
+            detail: {
+              deviceId: targetDevice.id,
+              adapters: targetDevice.networkAdapters.map(a =>
+                a.port === nextFreePort ? {
+                  ...a,
+                  connected: true,
+                  connectedToDevice: currentDevice.id
+                } : a
+              )
+            }
+          });
+          window.dispatchEvent(updateEvent);
+
+          console.log("Connection established between devices");
+        } else {
+          console.log("No free ports available on target device");
+          toast.error("No free ports available on target device");
+        }
+      }
     }
   };
 
