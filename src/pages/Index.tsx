@@ -35,11 +35,9 @@ const Index = () => {
     let newRacks: Rack[];
     
     if (existingRackIndex === -1) {
-      // This is a new rack
       newRacks = [...location.racks, updatedRack];
       console.log("Adding new rack to location");
     } else {
-      // This is an update to an existing rack
       newRacks = location.racks.map(rack =>
         rack.id === updatedRack.id ? updatedRack : rack
       );
@@ -77,6 +75,46 @@ const Index = () => {
     setSelectedRack(newRacks[0] || null);
     saveState(newLocation);
     toast.success("Rack deleted successfully");
+  };
+
+  const handleUpdateDevice = (updatedDevice: Device) => {
+    console.log("Updating device:", updatedDevice);
+    
+    if (!selectedRack) {
+      console.error("No rack selected for device update");
+      return;
+    }
+
+    const updatedDevices = selectedRack.devices.map(device =>
+      device.id === updatedDevice.id ? updatedDevice : device
+    );
+
+    const updatedRack = { ...selectedRack, devices: updatedDevices };
+    
+    const newLocation = {
+      ...location,
+      racks: location.racks.map(rack =>
+        rack.id === selectedRack.id ? updatedRack : rack
+      ),
+    };
+
+    console.log("Updated location state:", newLocation);
+    setLocation(newLocation);
+    saveState(newLocation);
+    
+    logTransaction(
+      "updated",
+      "device",
+      updatedDevice.name,
+      [{
+        field: "Device",
+        oldValue: selectedDevice?.name || "",
+        newValue: updatedDevice.name
+      }],
+      updatedDevice
+    );
+
+    toast.success("Device updated successfully");
   };
 
   // Group racks by location
@@ -118,6 +156,16 @@ const Index = () => {
           device={selectedDevice}
           onClose={() => setSelectedDevice(null)}
           onUpdate={handleUpdateDevice}
+          onDelete={(deviceId) => {
+            if (!selectedRack) return;
+            
+            const updatedDevices = selectedRack.devices.filter(
+              device => device.id !== deviceId
+            );
+            
+            const updatedRack = { ...selectedRack, devices: updatedDevices };
+            handleUpdateRack(updatedRack);
+          }}
           availableDevices={location.racks.flatMap(rack => rack.devices)}
         />
       )}
