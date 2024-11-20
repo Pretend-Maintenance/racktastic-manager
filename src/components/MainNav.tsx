@@ -1,26 +1,24 @@
-import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu"
-import { Link } from "react-router-dom"
+import { Link } from "react-router-dom";
 
 export function MainNav() {
   return (
-    <NavigationMenu className="max-w-screen px-4 py-2 border-b">
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <Link to="/" className="px-4 py-2 hover:bg-accent rounded-md">
+    <div className="border-b">
+      <div className="flex h-16 items-center px-4">
+        <nav className="flex items-center space-x-6 text-sm font-medium">
+          <Link to="/" className="transition-colors hover:text-primary">
             Racks
           </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link to="/logs" className="px-4 py-2 hover:bg-accent rounded-md">
-            Transaction Logs
+          <Link to="/network-map" className="transition-colors hover:text-primary">
+            Network Map
           </Link>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <Link to="/settings" className="px-4 py-2 hover:bg-accent rounded-md">
+          <Link to="/transactions" className="transition-colors hover:text-primary">
+            Transaction Log
+          </Link>
+          <Link to="/settings" className="transition-colors hover:text-primary">
             Settings
           </Link>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
-  )
+        </nav>
+      </div>
+    </div>
+  );
 }

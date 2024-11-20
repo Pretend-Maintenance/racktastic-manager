@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logTransaction } from "@/lib/storage";
 
 interface NetworkAdapterConnectionProps {
@@ -43,6 +43,11 @@ export const NetworkAdapterConnection = ({
 }: NetworkAdapterConnectionProps) => {
   const [showCreatePortDialog, setShowCreatePortDialog] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<string | undefined>();
+  const [selectedDevice, setSelectedDevice] = useState<string | undefined>(adapter.connectedToDevice);
+
+  useEffect(() => {
+    setSelectedDevice(adapter.connectedToDevice);
+  }, [adapter.connectedToDevice]);
 
   const handleConnectionAttempt = (targetDeviceId: string) => {
     console.log("Attempting connection to device:", targetDeviceId);
@@ -56,17 +61,28 @@ export const NetworkAdapterConnection = ({
       return;
     }
 
+    // If we're switching from one device to another, first disconnect from the old device
+    if (adapter.connected && adapter.connectedToDevice && adapter.connectedToDevice !== targetDeviceId) {
+      console.log("Disconnecting from previous device:", adapter.connectedToDevice);
+      onToggleConnection(adapter.id);
+    }
+
     const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
     if (!targetDevice) return;
 
-    // Find a free port on the target device
-    const freePort = targetDevice.networkAdapters.find(a => !a.connected);
+    // Find the previously used port if it exists and is free
+    const previousPort = targetDevice.networkAdapters.find(
+      a => a.connectedToDevice === currentDevice?.id && !a.connected
+    );
+    
+    // Find any free port if previous port isn't available
+    const freePort = previousPort || targetDevice.networkAdapters.find(a => !a.connected);
     
     if (freePort) {
-      console.log("Found free port:", freePort.port, "on device:", targetDevice.name);
+      console.log("Found port:", freePort.port, "on device:", targetDevice.name);
+      setSelectedDevice(targetDeviceId);
       onToggleConnection(adapter.id, targetDeviceId);
       
-      // Update the target device's port
       const updateEvent = new CustomEvent('updateDeviceAdapters', {
         detail: {
           deviceId: targetDevice.id,
@@ -109,14 +125,20 @@ export const NetworkAdapterConnection = ({
           <Button
             variant="default"
             size="sm"
-            onClick={() => onToggleConnection(adapter.id)}
+            onClick={() => {
+              onToggleConnection(adapter.id);
+              setSelectedDevice(undefined);
+            }}
           >
             <Cable className="w-4 h-4 text-white" />
           </Button>
         </div>
       ) : (
         <div className="flex items-center space-x-2">
-          <Select onValueChange={handleConnectionAttempt}>
+          <Select 
+            value={selectedDevice} 
+            onValueChange={handleConnectionAttempt}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Connect to..." />
             </SelectTrigger>
@@ -153,6 +175,7 @@ export const NetworkAdapterConnection = ({
             <AlertDialogCancel onClick={() => {
               setShowCreatePortDialog(false);
               setPendingConnection(undefined);
+              setSelectedDevice(adapter.connectedToDevice);
             }}>
               Cancel
             </AlertDialogCancel>
