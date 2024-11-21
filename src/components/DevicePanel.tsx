@@ -1,11 +1,12 @@
-import { Device, NetworkAdapter } from "@/lib/types";
+import { Device, NetworkAdapter, LogEntry } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, History } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import NetworkAdapters from "./NetworkAdapters";
 import { toast } from "sonner";
 import { useEffect, useState, useRef } from "react";
-import { logTransaction } from "@/lib/storage";
+import { logTransaction, getDeviceLogs } from "@/lib/storage";
+import { format } from "date-fns";
 
 interface DevicePanelProps {
   device: Device;
@@ -17,14 +18,23 @@ interface DevicePanelProps {
 
 const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: DevicePanelProps) => {
   const [currentDevice, setCurrentDevice] = useState(device);
+  const [recentChanges, setRecentChanges] = useState<LogEntry[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
+  const ignoreClickOutside = useRef(false);
 
   useEffect(() => {
     setCurrentDevice(device);
+    const logs = getDeviceLogs(device.id).slice(0, 3); // Get last 3 changes
+    setRecentChanges(logs);
   }, [device]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      if (ignoreClickOutside.current) {
+        ignoreClickOutside.current = false;
+        return;
+      }
+      
       if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
         onClose();
       }
@@ -45,6 +55,7 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
   };
 
   const handleNetworkAdapterUpdate = (adapters: NetworkAdapter[]) => {
+    ignoreClickOutside.current = true;
     const updatedDevice = { ...currentDevice, networkAdapters: adapters };
     setCurrentDevice(updatedDevice);
     onUpdate(updatedDevice);
@@ -128,6 +139,34 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
             availableDevices={availableDevices}
             currentDevice={currentDevice}
           />
+
+          {recentChanges.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Recent Changes
+              </h3>
+              <div className="space-y-3">
+                {recentChanges.map((log) => (
+                  <div key={log.id} className="bg-muted p-3 rounded-lg">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{log.action}</span>
+                      <span className="text-muted-foreground">
+                        {format(new Date(log.timestamp), "MMM d, HH:mm")}
+                      </span>
+                    </div>
+                    <div className="text-sm mt-1">
+                      {log.changes.map((change, idx) => (
+                        <div key={idx} className="text-muted-foreground">
+                          {change.field}: {change.oldValue} → {change.newValue}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
