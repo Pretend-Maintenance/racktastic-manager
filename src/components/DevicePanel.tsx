@@ -72,7 +72,25 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
 
   const handleEdit = () => {
     setIsEditing(true);
-    toast.info("Edit functionality coming soon!");
+    const name = prompt("Enter new device name:", currentDevice.name);
+    if (name && name !== currentDevice.name) {
+      const updatedDevice = { ...currentDevice, name };
+      setCurrentDevice(updatedDevice);
+      onUpdate(updatedDevice);
+      logTransaction(
+        "updated",
+        "device",
+        name,
+        [{
+          field: "name",
+          oldValue: currentDevice.name,
+          newValue: name
+        }],
+        currentDevice
+      );
+      toast.success("Device name updated successfully");
+    }
+    setIsEditing(false);
   };
 
   return (

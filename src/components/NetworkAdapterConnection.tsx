@@ -112,8 +112,12 @@ export const NetworkAdapterConnection = ({
     }
   };
 
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
       {adapter.connected ? (
         <div className="flex items-center space-x-2">
           {adapter.connectedToDevice && (
@@ -134,15 +138,21 @@ export const NetworkAdapterConnection = ({
           </Button>
         </div>
       ) : (
-        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center space-x-2">
           <Select 
             value={selectedDevice} 
             onValueChange={handleConnectionAttempt}
+            onOpenChange={(open) => {
+              if (open) {
+                // Prevent event propagation when opening the select
+                event?.stopPropagation();
+              }
+            }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" onClick={handleSelectClick}>
               <SelectValue placeholder="Connect to..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent onClick={handleSelectClick}>
               {availableDevices
                 .filter(device => device.id !== currentDevice?.id)
                 .map(device => (
