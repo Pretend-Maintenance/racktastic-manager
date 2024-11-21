@@ -113,7 +113,7 @@ export const NetworkAdapterConnection = ({
   };
 
   return (
-    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center space-x-2">
       {adapter.connected ? (
         <div className="flex items-center space-x-2">
           {adapter.connectedToDevice && (
@@ -124,7 +124,8 @@ export const NetworkAdapterConnection = ({
           <Button
             variant="default"
             size="sm"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               onToggleConnection(adapter.id);
               setSelectedDevice(undefined);
             }}
@@ -133,7 +134,7 @@ export const NetworkAdapterConnection = ({
           </Button>
         </div>
       ) : (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
           <Select 
             value={selectedDevice} 
             onValueChange={handleConnectionAttempt}
@@ -155,7 +156,10 @@ export const NetworkAdapterConnection = ({
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => onRemoveAdapter(adapter.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveAdapter(adapter.id);
+            }}
           >
             <Trash2 className="w-4 h-4" />
           </Button>
