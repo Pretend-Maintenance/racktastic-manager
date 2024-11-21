@@ -74,7 +74,7 @@ export const NetworkAdapterConnection = ({
     const freePort = targetDevice.networkAdapters.find(a => !a.connected);
     
     if (freePort) {
-      console.log("Found port:", freePort.port, "on device:", targetDevice.name);
+      console.log("Found free port:", freePort.port, "on device:", targetDevice.name);
       setSelectedDevice(targetDeviceId);
       onToggleConnection(adapter.id, targetDeviceId);
       
@@ -91,17 +91,20 @@ export const NetworkAdapterConnection = ({
       });
       window.dispatchEvent(updateEvent);
       
-      logTransaction(
-        "connected",
-        "networkAdapter",
-        `${adapter.name} (Port ${adapter.port})`,
-        [{
-          field: "Connection",
-          oldValue: "Disconnected",
-          newValue: `Connected to ${targetDevice.name} (Port ${freePort.port})`
-        }],
-        currentDevice
-      );
+      // Log the connection
+      if (currentDevice) {
+        logTransaction(
+          "connected",
+          "networkAdapter",
+          `${adapter.name} (Port ${adapter.port})`,
+          [{
+            field: "Connection",
+            oldValue: "Disconnected",
+            newValue: `Connected to ${targetDevice.name} (Port ${freePort.port})`
+          }],
+          currentDevice
+        );
+      }
     } else {
       console.log("No free ports available on target device:", targetDevice.name);
       setPendingConnection(targetDeviceId);
@@ -110,7 +113,7 @@ export const NetworkAdapterConnection = ({
   };
 
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
       {adapter.connected ? (
         <div className="flex items-center space-x-2">
           {adapter.connectedToDevice && (

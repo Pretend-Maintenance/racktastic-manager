@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Device, Location, LogEntry } from "@/lib/types";
+import { Device, Location } from "@/lib/types";
 import { loadState, getDeviceLogs } from "@/lib/storage";
 import { MainNav } from "@/components/MainNav";
 import DevicePanel from "@/components/DevicePanel";
@@ -41,7 +41,7 @@ const NetworkMapPage = () => {
       const y = Math.floor(index / cols) * 150 + 100;
       positions[device.id] = { x, y };
 
-      // Draw clickable device node
+      // Draw device node
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x - 82, y - 32, 164, 64);
       ctx.fillStyle = '#1f2937';
@@ -100,7 +100,7 @@ const NetworkMapPage = () => {
     });
 
     // Add click handler for devices
-    canvas.onclick = (event) => {
+    const handleCanvasClick = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
@@ -116,8 +116,10 @@ const NetworkMapPage = () => {
       });
     };
 
+    canvas.addEventListener('click', handleCanvasClick);
+
     return () => {
-      canvas.onclick = null;
+      canvas.removeEventListener('click', handleCanvasClick);
     };
   }, [location, selectedDevice]);
 
