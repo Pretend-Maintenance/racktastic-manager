@@ -12,6 +12,27 @@ const getDeviceDetails = (device: Device) => ({
   height: `${device.height}U`,
 });
 
+export const getDeviceLogs = (deviceId: string): LogEntry[] => {
+  console.log("Fetching logs for device:", deviceId);
+  
+  const logs: LogEntry[] = [];
+  // Iterate through localStorage to find logs related to this device
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('log_')) {
+      const logEntry = JSON.parse(localStorage.getItem(key) || '{}');
+      if (logEntry.deviceDetails) {
+        logs.push(logEntry);
+      }
+    }
+  }
+  
+  // Sort logs by timestamp in descending order (newest first)
+  return logs.sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
+};
+
 export const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
   console.log("Logging transaction:", { action, itemType, itemName, changes, device });
   
@@ -46,7 +67,6 @@ export const loadState = (): Location | null => {
   return saved ? JSON.parse(saved) : null;
 };
 
-// Enhanced network adapter creation based on templates
 export const createDefaultAdapters = (deviceType: string): NetworkAdapter[] => {
   console.log("Creating default adapters for:", deviceType);
   
