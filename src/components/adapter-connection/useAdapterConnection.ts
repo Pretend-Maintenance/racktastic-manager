@@ -29,14 +29,31 @@ export const useAdapterConnection = (
       return;
     }
 
-    if (adapter.connected && adapter.connectedToDevice && adapter.connectedToDevice !== targetDeviceId) {
-      console.log("Disconnecting from previous device:", adapter.connectedToDevice);
+    // First disconnect if already connected
+    if (adapter.connected) {
+      console.log("Disconnecting current connection before making new one");
       onToggleConnection(adapter.id);
     }
 
     const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
-    if (!targetDevice) return;
+    if (!targetDevice) {
+      console.error("Target device not found:", targetDeviceId);
+      return;
+    }
 
+    // Check for existing connection from target device to current device
+    const existingConnection = targetDevice.networkAdapters.find(
+      a => a.connectedToDevice === currentDevice?.id
+    );
+
+    if (existingConnection) {
+      console.log("Found existing connection on target device:", existingConnection);
+      setSelectedDevice(targetDeviceId);
+      onToggleConnection(adapter.id, targetDeviceId);
+      return;
+    }
+
+    // Look for any free port
     const freePort = targetDevice.networkAdapters.find(a => !a.connected);
     
     if (freePort) {

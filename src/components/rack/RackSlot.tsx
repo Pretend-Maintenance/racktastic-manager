@@ -1,5 +1,6 @@
 import { Device } from "@/lib/types";
 import { Server, Network, Shield, Database } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface RackSlotProps {
   position: number;
@@ -13,15 +14,15 @@ interface RackSlotProps {
 const getDeviceIcon = (type: Device["type"]) => {
   switch (type) {
     case "server":
-      return <Server className="w-6 h-6" />;
+      return <Server className="w-5 h-5 flex-shrink-0" />;
     case "switch":
-      return <Network className="w-6 h-6" />;
+      return <Network className="w-5 h-5 flex-shrink-0" />;
     case "firewall":
-      return <Shield className="w-6 h-6" />;
+      return <Shield className="w-5 h-5 flex-shrink-0" />;
     case "storage":
-      return <Database className="w-6 h-6" />;
+      return <Database className="w-5 h-5 flex-shrink-0" />;
     default:
-      return <Server className="w-6 h-6" />;
+      return <Server className="w-5 h-5 flex-shrink-0" />;
   }
 };
 
@@ -39,25 +40,26 @@ export const RackSlot = ({ position, device, onDrop, onSelectDevice, isOccupied,
 
   return (
     <div
-      className={`h-12 border-t border-rack-rail relative ${
+      className={cn(
+        "h-12 border-t border-rack-rail relative",
         device ? `bg-device-${device.type}` : "bg-rack-slot"
-      }`}
+      )}
       onDragOver={handleDragOver}
       onDrop={() => !isOccupied && onDrop(position)}
     >
-      <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center text-white">
+      <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center text-white text-sm font-medium">
         {position}
       </div>
       {device && position === device.position && (
         <div
-          className="absolute inset-0 flex items-center justify-center bg-opacity-90 text-white cursor-pointer"
+          className="absolute inset-0 flex items-center pl-10 pr-2 bg-opacity-90 text-white cursor-pointer overflow-hidden"
           draggable
           onDragStart={(e) => handleDragStart(e, device)}
           onClick={() => onSelectDevice(device)}
         >
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 min-w-0">
             {getDeviceIcon(device.type)}
-            <span>{device.name}</span>
+            <span className="truncate text-sm">{device.name}</span>
           </div>
         </div>
       )}
