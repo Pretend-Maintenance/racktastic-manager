@@ -9,18 +9,8 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Cable, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useState, useEffect } from "react";
-import { logTransaction } from "@/lib/storage";
+import { AlertDialogContent } from "./adapter-connection/AlertDialogContent";
+import { useAdapterConnection } from "./adapter-connection/useAdapterConnection";
 
 interface NetworkAdapterConnectionProps {
   adapter: NetworkAdapter;
@@ -41,83 +31,23 @@ export const NetworkAdapterConnection = ({
   customConnection,
   setCustomConnection
 }: NetworkAdapterConnectionProps) => {
-  const [showCreatePortDialog, setShowCreatePortDialog] = useState(false);
-  const [pendingConnection, setPendingConnection] = useState<string | undefined>();
-  const [selectedDevice, setSelectedDevice] = useState<string | undefined>(adapter.connectedToDevice);
-
-  useEffect(() => {
-    setSelectedDevice(adapter.connectedToDevice);
-  }, [adapter.connectedToDevice]);
-
-  const handleConnectionAttempt = (targetDeviceId: string) => {
-    console.log("Attempting connection to device:", targetDeviceId);
-    
-    if (targetDeviceId === "custom") {
-      const connection = window.prompt("Enter custom connection details:");
-      if (connection) {
-        setCustomConnection(connection);
-        onToggleConnection(adapter.id, "custom");
-      }
-      return;
-    }
-
-    // If we're switching from one device to another, first disconnect from the old device
-    if (adapter.connected && adapter.connectedToDevice && adapter.connectedToDevice !== targetDeviceId) {
-      console.log("Disconnecting from previous device:", adapter.connectedToDevice);
-      onToggleConnection(adapter.id);
-    }
-
-    const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
-    if (!targetDevice) return;
-
-    // Find any free port on the target device
-    const freePort = targetDevice.networkAdapters.find(a => !a.connected);
-    
-    if (freePort) {
-      console.log("Found free port:", freePort.port, "on device:", targetDevice.name);
-      setSelectedDevice(targetDeviceId);
-      onToggleConnection(adapter.id, targetDeviceId);
-      
-      // Update both devices' states
-      const updateEvent = new CustomEvent('updateDeviceAdapters', {
-        detail: {
-          deviceId: targetDevice.id,
-          adapters: targetDevice.networkAdapters.map(a =>
-            a.id === freePort.id
-              ? { ...a, connected: true, connectedToDevice: currentDevice?.id }
-              : a
-          )
-        }
-      });
-      window.dispatchEvent(updateEvent);
-      
-      // Log the connection
-      if (currentDevice) {
-        logTransaction(
-          "connected",
-          "networkAdapter",
-          `${adapter.name} (Port ${adapter.port})`,
-          [{
-            field: "Connection",
-            oldValue: "Disconnected",
-            newValue: `Connected to ${targetDevice.name} (Port ${freePort.port})`
-          }],
-          currentDevice
-        );
-      }
-    } else {
-      console.log("No free ports available on target device:", targetDevice.name);
-      setPendingConnection(targetDeviceId);
-      setShowCreatePortDialog(true);
-    }
-  };
+  const {
+    showCreatePortDialog,
+    setShowCreatePortDialog,
+    pendingConnection,
+    setPendingConnection,
+    selectedDevice,
+    setSelectedDevice,
+    handleConnectionAttempt
+  } = useAdapterConnection(adapter, onToggleConnection, availableDevices, currentDevice, setCustomConnection);
 
   const handleSelectClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
   };
 
   return (
-    <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center space-x-2" onClick={handleSelectClick}>
       {adapter.connected ? (
         <div className="flex items-center space-x-2">
           {adapter.connectedToDevice && (
@@ -129,6 +59,7 @@ export const NetworkAdapterConnection = ({
             variant="default"
             size="sm"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onToggleConnection(adapter.id);
               setSelectedDevice(undefined);
@@ -144,7 +75,7 @@ export const NetworkAdapterConnection = ({
             onValueChange={handleConnectionAttempt}
             onOpenChange={(open) => {
               if (open) {
-                // Prevent event propagation when opening the select
+                event?.preventDefault();
                 event?.stopPropagation();
               }
             }}
@@ -167,6 +98,7 @@ export const NetworkAdapterConnection = ({
             variant="destructive"
             size="sm"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
               onRemoveAdapter(adapter.id);
             }}
@@ -176,34 +108,15 @@ export const NetworkAdapterConnection = ({
         </div>
       )}
 
-      <AlertDialog open={showCreatePortDialog} onOpenChange={setShowCreatePortDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>No Free Ports Available</AlertDialogTitle>
-            <AlertDialogDescription>
-              There are no free ports on this device. Would you like to create one and connect the devices?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setShowCreatePortDialog(false);
-              setPendingConnection(undefined);
-              setSelectedDevice(adapter.connectedToDevice);
-            }}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              if (pendingConnection) {
-                onToggleConnection(adapter.id, pendingConnection);
-                setShowCreatePortDialog(false);
-                setPendingConnection(undefined);
-              }
-            }}>
-              Create Port and Connect
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AlertDialogContent 
+        showDialog={showCreatePortDialog}
+        setShowDialog={setShowCreatePortDialog}
+        pendingConnection={pendingConnection}
+        setPendingConnection={setPendingConnection}
+        adapter={adapter}
+        onToggleConnection={onToggleConnection}
+        setSelectedDevice={setSelectedDevice}
+      />
     </div>
   );
 };

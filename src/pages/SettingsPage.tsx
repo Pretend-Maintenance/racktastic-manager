@@ -1,12 +1,24 @@
 import { useState } from "react"
 import { MainNav } from "@/components/MainNav"
 import { Button } from "@/components/ui/button"
-import { Download, Upload } from "lucide-react"
+import { Download, Upload, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Location } from "@/lib/types"
 import { saveState } from "@/lib/storage"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const SettingsPage = () => {
+  const [showClearDialog, setShowClearDialog] = useState(false);
+
   const handleBackupDownload = () => {
     const currentState = localStorage.getItem("datacenter_status")
     if (!currentState) {
@@ -60,6 +72,13 @@ const SettingsPage = () => {
     reader.readAsText(file)
   }
 
+  const handleClearData = () => {
+    localStorage.removeItem("datacenter_status");
+    localStorage.removeItem("transaction_log");
+    toast.success("All data has been cleared");
+    setShowClearDialog(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <MainNav />
@@ -87,10 +106,35 @@ const SettingsPage = () => {
                   Restore Backup
                 </Button>
               </div>
+
+              <Button 
+                variant="destructive" 
+                onClick={() => setShowClearDialog(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear All Data
+              </Button>
             </div>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Data</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all your data, including device configurations and transaction logs. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearData} className="bg-destructive">
+              Clear Data
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
