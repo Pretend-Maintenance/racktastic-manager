@@ -39,7 +39,13 @@ export const NetworkAdapterConnection = ({
     selectedDevice,
     setSelectedDevice,
     handleConnectionAttempt
-  } = useAdapterConnection(adapter, onToggleConnection, availableDevices, currentDevice, setCustomConnection);
+  } = useAdapterConnection(
+    adapter,
+    onToggleConnection,
+    availableDevices,
+    setCustomConnection,
+    currentDevice
+  );
 
   const handleSelectClick = (e: React.MouseEvent) => {
     e.preventDefault();
