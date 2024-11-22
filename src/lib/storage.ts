@@ -19,7 +19,7 @@ export const getDeviceLogs = (deviceId: string): LogEntry[] => {
   // Iterate through localStorage to find logs related to this device
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key?.startsWith('log_')) {
+    if (key && key.startsWith('log_')) {
       const logEntry = JSON.parse(localStorage.getItem(key) || '{}');
       if (logEntry.deviceDetails) {
         logs.push(logEntry);

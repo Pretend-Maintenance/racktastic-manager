@@ -1,7 +1,7 @@
 import { Device, NetworkAdapter, LogEntry } from "@/lib/types";
 import NetworkAdapters from "./NetworkAdapters";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { logTransaction, getDeviceLogs } from "@/lib/storage";
 
 // Split into smaller components for better maintainability
