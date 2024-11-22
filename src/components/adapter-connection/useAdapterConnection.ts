@@ -6,8 +6,8 @@ export const useAdapterConnection = (
   adapter: NetworkAdapter,
   onToggleConnection: (id: string, targetDeviceId?: string) => void,
   availableDevices: Device[],
-  currentDevice?: Device,
-  setCustomConnection: (value: string) => void
+  setCustomConnection: (value: string) => void,
+  currentDevice?: Device
 ) => {
   const [showCreatePortDialog, setShowCreatePortDialog] = useState(false);
   const [pendingConnection, setPendingConnection] = useState<string | undefined>();
