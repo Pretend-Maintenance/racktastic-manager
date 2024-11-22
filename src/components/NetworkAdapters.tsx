@@ -1,23 +1,17 @@
 import { NetworkAdapter, Device } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { NetworkAdapterForm } from "./NetworkAdapterForm";
-import { NetworkAdapterConnection } from "./NetworkAdapterConnection";
-import { useState } from "react";
 import { logTransaction } from "@/lib/storage";
-import { findNextFreePort } from "./network-adapters/portUtils";
-
-// Split into smaller components for better maintainability
-import { AdapterList } from "./network-adapters/AdapterList";
 import { AdapterHeader } from "./network-adapters/AdapterHeader";
+import { NetworkAdapterList } from "./network-adapters/NetworkAdapterList";
+import { handleConnection } from "./network-adapters/ConnectionManager";
 
 interface NetworkAdaptersProps {
   adapters: NetworkAdapter[];
@@ -66,7 +60,6 @@ const NetworkAdapters = ({
     const adapter = adapters.find(a => a.id === id);
     if (!adapter) return;
 
-    // If the adapter is connected, we need to disconnect it from the target device
     if (adapter.connected && adapter.connectedToDevice) {
       const targetDevice = availableDevices?.find(d => d.id === adapter.connectedToDevice);
       if (targetDevice) {
@@ -105,37 +98,25 @@ const NetworkAdapters = ({
   };
 
   const toggleConnection = (id: string, targetDeviceId?: string) => {
-    if (!currentDevice) return;
-    
     const adapter = adapters.find(a => a.id === id);
     if (!adapter) return;
 
-    console.log("Toggling connection:", { 
-      sourceDevice: currentDevice.name, 
-      sourceAdapter: adapter.name,
-      targetDeviceId 
-    });
-
-    // If we're disconnecting
     if (adapter.connected) {
-      console.log("Disconnecting devices");
-      
-      // Update source adapter
-      const newAdapters = adapters.map(a =>
+      // Disconnect
+      const updatedAdapters = adapters.map(a =>
         a.id === id ? { ...a, connected: false, connectedToDevice: undefined } : a
       );
-      onUpdate(newAdapters);
+      onUpdate(updatedAdapters);
 
       // Update target device if it exists
       if (adapter.connectedToDevice && adapter.connectedToDevice !== "custom") {
         const targetDevice = availableDevices.find(d => d.id === adapter.connectedToDevice);
         if (targetDevice) {
-          console.log("Updating target device:", targetDevice.name);
           const updateEvent = new CustomEvent('updateDeviceAdapters', {
             detail: {
               deviceId: targetDevice.id,
               adapters: targetDevice.networkAdapters.map(a => 
-                a.connectedToDevice === currentDevice.id 
+                a.connectedToDevice === currentDevice?.id 
                   ? { ...a, connected: false, connectedToDevice: undefined }
                   : a
               )
@@ -144,83 +125,16 @@ const NetworkAdapters = ({
           window.dispatchEvent(updateEvent);
         }
       }
-    } 
-    // If we're connecting
-    else if (targetDeviceId) {
-      console.log("Connecting devices");
-      
-      // Handle custom connections
-      if (targetDeviceId === "custom") {
-        const newAdapters = adapters.map(a =>
-          a.id === id ? { 
-            ...a, 
-            connected: true,
-            connectedToDevice: "custom",
-            customConnection: customConnection 
-          } : a
-        );
-        onUpdate(newAdapters);
-        return;
-      }
-
-      // Handle device-to-device connections
-      const targetDevice = availableDevices.find(d => d.id === targetDeviceId);
-      if (targetDevice) {
-        console.log("Found target device:", targetDevice.name);
-        const nextFreePort = findNextFreePort(targetDevice.networkAdapters);
-        
-        if (nextFreePort) {
-          console.log("Found free port on target device:", nextFreePort);
-          
-          // Update source adapter
-          const newAdapters = adapters.map(a =>
-            a.id === id ? { 
-              ...a, 
-              connected: true,
-              connectedToDevice: targetDeviceId 
-            } : a
-          );
-          onUpdate(newAdapters);
-
-          // Find the target adapter that corresponds to the free port
-          const targetAdapter = targetDevice.networkAdapters.find(a => a.port === nextFreePort);
-          
-          if (targetAdapter) {
-            // Update target device with explicit adapter connection
-            const updateEvent = new CustomEvent('updateDeviceAdapters', {
-              detail: {
-                deviceId: targetDevice.id,
-                adapters: targetDevice.networkAdapters.map(a =>
-                  a.id === targetAdapter.id ? {
-                    ...a,
-                    connected: true,
-                    connectedToDevice: currentDevice.id
-                  } : a
-                )
-              }
-            });
-            window.dispatchEvent(updateEvent);
-
-            // Log the connection for both devices
-            logTransaction(
-              "connected",
-              "networkAdapter",
-              `${adapter.name} (Port ${adapter.port})`,
-              [{
-                field: "Connection",
-                oldValue: "Disconnected",
-                newValue: `Connected to ${targetDevice.name} (Port ${nextFreePort})`
-              }],
-              currentDevice
-            );
-
-            console.log("Connection established between devices");
-          }
-        } else {
-          console.log("No free ports available on target device");
-          toast.error("No free ports available on target device");
-        }
-      }
+    } else if (targetDeviceId) {
+      // Connect
+      handleConnection({
+        adapter,
+        currentDevice,
+        targetDeviceId,
+        onUpdate,
+        adapters,
+        availableDevices
+      });
     }
   };
 
@@ -239,7 +153,7 @@ const NetworkAdapters = ({
         </DialogContent>
       </Dialog>
       
-      <AdapterList 
+      <NetworkAdapterList 
         adapters={adapters}
         onToggleConnection={toggleConnection}
         onRemoveAdapter={handleRemoveAdapter}
