@@ -1,12 +1,22 @@
 import { NetworkAdapter } from "@/lib/types";
 
 export const findNextFreePort = (adapters: NetworkAdapter[]): string | null => {
-  const usedPorts = new Set(adapters.filter(a => a.connected).map(a => a.port));
-  const allPorts = adapters.map(a => a.port);
+  // Sort adapters by port number for consistent assignment
+  const sortedAdapters = [...adapters].sort((a, b) => {
+    const portA = parseInt(a.port) || 0;
+    const portB = parseInt(b.port) || 0;
+    return portA - portB;
+  });
+
+  // Find the first unused port
+  for (let i = 0; i < sortedAdapters.length; i++) {
+    const adapter = sortedAdapters[i];
+    if (!adapter.connected) {
+      console.log(`Found free port: ${adapter.port}`);
+      return adapter.port;
+    }
+  }
   
-  // First try to find an existing free port
-  const existingFreePort = allPorts.find(port => !usedPorts.has(port));
-  if (existingFreePort) return existingFreePort;
-  
+  console.log("No free ports found");
   return null;
 };

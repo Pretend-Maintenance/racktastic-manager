@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NetworkAdapter, Device } from "@/lib/types";
 import { logTransaction } from "@/lib/storage";
+import { findNextFreePort } from "../network-adapters/portUtils";
 
 export const useAdapterConnection = (
   adapter: NetworkAdapter,
@@ -41,50 +42,54 @@ export const useAdapterConnection = (
       return;
     }
 
-    // Check for existing connection from target device to current device
-    const existingConnection = targetDevice.networkAdapters.find(
-      a => a.connectedToDevice === currentDevice?.id
-    );
+    console.log("Current device:", currentDevice?.name);
+    console.log("Target device:", targetDevice.name);
+    console.log("Source adapter:", adapter);
+    console.log("Target device adapters:", targetDevice.networkAdapters);
 
-    if (existingConnection) {
-      console.log("Found existing connection on target device:", existingConnection);
-      setSelectedDevice(targetDeviceId);
-      onToggleConnection(adapter.id, targetDeviceId);
-      return;
-    }
+    // Find next available port on target device
+    const nextFreePort = findNextFreePort(targetDevice.networkAdapters);
+    console.log("Next free port on target device:", nextFreePort);
 
-    // Look for any free port
-    const freePort = targetDevice.networkAdapters.find(a => !a.connected);
-    
-    if (freePort) {
-      console.log("Found free port:", freePort.port, "on device:", targetDevice.name);
-      setSelectedDevice(targetDeviceId);
-      onToggleConnection(adapter.id, targetDeviceId);
+    if (nextFreePort) {
+      console.log("Found free port:", nextFreePort, "on device:", targetDevice.name);
       
-      const updateEvent = new CustomEvent('updateDeviceAdapters', {
-        detail: {
-          deviceId: targetDevice.id,
-          adapters: targetDevice.networkAdapters.map(a =>
-            a.id === freePort.id
-              ? { ...a, connected: true, connectedToDevice: currentDevice?.id }
-              : a
-          )
+      // Find the adapter that corresponds to the free port
+      const targetAdapter = targetDevice.networkAdapters.find(a => a.port === nextFreePort);
+      
+      if (targetAdapter) {
+        console.log("Found target adapter:", targetAdapter);
+        
+        // Update the connection
+        setSelectedDevice(targetDeviceId);
+        onToggleConnection(adapter.id, targetDeviceId);
+
+        // Update the target device's adapter
+        const updateEvent = new CustomEvent('updateDeviceAdapters', {
+          detail: {
+            deviceId: targetDevice.id,
+            adapters: targetDevice.networkAdapters.map(a =>
+              a.id === targetAdapter.id
+                ? { ...a, connected: true, connectedToDevice: currentDevice?.id }
+                : a
+            )
+          }
+        });
+        window.dispatchEvent(updateEvent);
+
+        if (currentDevice) {
+          logTransaction(
+            "connected",
+            "networkAdapter",
+            `${adapter.name} (Port ${adapter.port})`,
+            [{
+              field: "Connection",
+              oldValue: "Disconnected",
+              newValue: `Connected to ${targetDevice.name} (Port ${nextFreePort})`
+            }],
+            currentDevice
+          );
         }
-      });
-      window.dispatchEvent(updateEvent);
-      
-      if (currentDevice) {
-        logTransaction(
-          "connected",
-          "networkAdapter",
-          `${adapter.name} (Port ${adapter.port})`,
-          [{
-            field: "Connection",
-            oldValue: "Disconnected",
-            newValue: `Connected to ${targetDevice.name} (Port ${freePort.port})`
-          }],
-          currentDevice
-        );
       }
     } else {
       console.log("No free ports available on target device:", targetDevice.name);
