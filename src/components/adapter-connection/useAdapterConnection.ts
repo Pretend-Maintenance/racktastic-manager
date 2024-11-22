@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NetworkAdapter, Device } from "@/lib/types";
 import { logTransaction } from "@/lib/storage";
-import { findNextFreePort } from "../network-adapters/portUtils";
+import { findNextFreePort, findAdapterByPort } from "../network-adapters/portUtils";
 
 export const useAdapterConnection = (
   adapter: NetworkAdapter,
@@ -55,7 +55,7 @@ export const useAdapterConnection = (
       console.log("Found free port:", nextFreePort, "on device:", targetDevice.name);
       
       // Find the adapter that corresponds to the free port
-      const targetAdapter = targetDevice.networkAdapters.find(a => a.port === nextFreePort);
+      const targetAdapter = findAdapterByPort(targetDevice.networkAdapters, nextFreePort);
       
       if (targetAdapter) {
         console.log("Found target adapter:", targetAdapter);
@@ -70,7 +70,12 @@ export const useAdapterConnection = (
             deviceId: targetDevice.id,
             adapters: targetDevice.networkAdapters.map(a =>
               a.id === targetAdapter.id
-                ? { ...a, connected: true, connectedToDevice: currentDevice?.id }
+                ? { 
+                    ...a, 
+                    connected: true, 
+                    connectedToDevice: currentDevice?.id,
+                    port: nextFreePort // Ensure port is explicitly set
+                  }
                 : a
             )
           }
