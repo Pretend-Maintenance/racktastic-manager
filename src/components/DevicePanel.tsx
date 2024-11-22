@@ -1,12 +1,8 @@
 import { Device, NetworkAdapter, LogEntry } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { X, Trash2, History, Edit } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import NetworkAdapters from "./NetworkAdapters";
 import { toast } from "sonner";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { logTransaction, getDeviceLogs } from "@/lib/storage";
-import { format } from "date-fns";
 
 // Split into smaller components for better maintainability
 import { DeviceInfo } from "./device-panel/DeviceInfo";
@@ -25,7 +21,6 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
   const [currentDevice, setCurrentDevice] = useState(device);
   const [recentChanges, setRecentChanges] = useState<LogEntry[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
   const ignoreClickOutside = useRef(false);
 
   useEffect(() => {
@@ -33,30 +28,6 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
     const logs = getDeviceLogs(device.id).slice(0, 3);
     setRecentChanges(logs);
   }, [device]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ignoreClickOutside.current) {
-        ignoreClickOutside.current = false;
-        return;
-      }
-      
-      // Check if the click target is a select element or its children
-      const target = event.target as HTMLElement;
-      if (target.closest('.select-content') || target.closest('[role="combobox"]')) {
-        return;
-      }
-      
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onClose]);
 
   const handleStatusChange = (enabled: boolean) => {
     const newStatus = enabled ? 'active' as const : 'inactive' as const;
@@ -105,7 +76,7 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
   };
 
   return (
-    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto z-50" ref={panelRef}>
+    <div className="fixed right-0 top-0 h-full w-96 bg-background border-l animate-slide-in overflow-y-auto z-50">
       <div className="p-6">
         <DeviceHeader 
           deviceName={currentDevice.name}

@@ -33,6 +33,46 @@ export const getDeviceLogs = (deviceId: string): LogEntry[] => {
   );
 };
 
+export const clearAllData = () => {
+  // Log the clear event before clearing
+  logTransaction(
+    "cleared",
+    "rack",
+    "all data",
+    [{
+      field: "Data",
+      oldValue: "All data",
+      newValue: "Cleared"
+    }]
+  );
+
+  // Clear all data except logs
+  const logs = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith('log_')) {
+      logs[key] = localStorage.getItem(key);
+    }
+  }
+
+  localStorage.clear();
+
+  // Restore logs
+  Object.entries(logs).forEach(([key, value]) => {
+    if (value) localStorage.setItem(key, value);
+  });
+
+  // Initialize with empty state
+  const emptyState: Location = {
+    id: crypto.randomUUID(),
+    name: "Data Center 1",
+    racks: []
+  };
+  
+  localStorage.setItem(STATUS_KEY, JSON.stringify(emptyState));
+  return emptyState;
+};
+
 export const logTransaction = (action: string, itemType: "device" | "rack" | "networkAdapter", itemName: string, changes: any[] = [], device?: Device) => {
   console.log("Logging transaction:", { action, itemType, itemName, changes, device });
   

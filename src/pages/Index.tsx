@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Device, Rack, Location } from "@/lib/types";
-import RackView from "@/components/RackView";
 import DevicePanel from "@/components/DevicePanel";
 import { MainNav } from "@/components/MainNav";
 import { toast } from "sonner";
-import { saveState, loadState, logTransaction } from "@/lib/storage";
+import { saveState, loadState, logTransaction, clearAllData } from "@/lib/storage";
 import { RackGroup } from "@/components/rack/RackGroup";
 
 const defaultLocation: Location = {
@@ -21,10 +20,14 @@ const Index = () => {
   useEffect(() => {
     const savedState = loadState();
     if (savedState) {
+      console.log("Loading saved state:", savedState);
       setLocation(savedState);
       if (savedState.racks.length > 0) {
         setSelectedRack(savedState.racks[0]);
       }
+    } else {
+      console.log("No saved state found, using default");
+      setLocation(defaultLocation);
     }
   }, []);
 
@@ -136,17 +139,28 @@ const Index = () => {
             <h1 className="text-2xl font-bold">Data Center Management</h1>
           </div>
           <div className="mb-8 space-y-8">
-            {Object.entries(groupedRacks).map(([locationName, racks]) => (
+            {Object.entries(groupedRacks).length > 0 ? (
+              Object.entries(groupedRacks).map(([locationName, racks]) => (
+                <RackGroup
+                  key={locationName}
+                  locationName={locationName}
+                  racks={racks}
+                  onSelectRack={setSelectedRack}
+                  onSelectDevice={setSelectedDevice}
+                  onUpdateRack={handleUpdateRack}
+                  onDeleteRack={handleDeleteRack}
+                />
+              ))
+            ) : (
               <RackGroup
-                key={locationName}
-                locationName={locationName}
-                racks={racks}
+                locationName="Data Center 1"
+                racks={[]}
                 onSelectRack={setSelectedRack}
                 onSelectDevice={setSelectedDevice}
                 onUpdateRack={handleUpdateRack}
                 onDeleteRack={handleDeleteRack}
               />
-            ))}
+            )}
           </div>
         </div>
       </div>
