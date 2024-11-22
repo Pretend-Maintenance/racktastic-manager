@@ -30,10 +30,10 @@ export const clearAllData = () => {
   );
 
   // Clear all data except logs
-  const logs = {};
+  const logs: Record<string, string | null> = {};
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (typeof key === 'string' && key.startsWith('log_')) {
+    if (key && key.startsWith('log_')) {
       logs[key] = localStorage.getItem(key);
     }
   }
