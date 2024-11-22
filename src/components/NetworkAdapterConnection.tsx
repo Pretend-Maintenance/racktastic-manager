@@ -52,13 +52,30 @@ export const NetworkAdapterConnection = ({
     e.stopPropagation();
   };
 
+  const getConnectedDeviceName = () => {
+    if (!adapter.connected) return null;
+    
+    if (adapter.customConnection) {
+      return adapter.customConnection;
+    }
+
+    if (adapter.connectedToDevice) {
+      const device = availableDevices.find(d => d.id === adapter.connectedToDevice);
+      return device?.name || 'Unknown Device';
+    }
+
+    return null;
+  };
+
+  const connectedDeviceName = getConnectedDeviceName();
+
   return (
     <div className="flex items-center space-x-2" onClick={handleSelectClick}>
       {adapter.connected ? (
         <div className="flex items-center space-x-2">
-          {adapter.connectedToDevice && (
+          {connectedDeviceName && (
             <span className="text-sm text-muted-foreground">
-              → {adapter.customConnection || availableDevices.find(d => d.id === adapter.connectedToDevice)?.name || 'Custom'}
+              → {connectedDeviceName}
             </span>
           )}
           <Button
