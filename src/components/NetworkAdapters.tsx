@@ -1,5 +1,5 @@
 import { NetworkAdapter, Device } from "@/lib/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,15 +28,40 @@ const NetworkAdapters = ({
 }: NetworkAdaptersProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customConnection, setCustomConnection] = useState("");
+  const [localAdapters, setLocalAdapters] = useState(adapters);
+
+  // Sync local state with props
+  useEffect(() => {
+    console.log("Adapters updated:", adapters);
+    setLocalAdapters(adapters);
+  }, [adapters]);
+
+  // Listen for device adapter updates
+  useEffect(() => {
+    const handleDeviceAdapterUpdate = (event: CustomEvent<{ deviceId: string; adapters: NetworkAdapter[] }>) => {
+      console.log("Device adapter update event received:", event.detail);
+      if (currentDevice && event.detail.deviceId === currentDevice.id) {
+        console.log("Updating adapters for current device");
+        setLocalAdapters(event.detail.adapters);
+        onUpdate(event.detail.adapters);
+      }
+    };
+
+    window.addEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
+    return () => {
+      window.removeEventListener('updateDeviceAdapters', handleDeviceAdapterUpdate as EventListener);
+    };
+  }, [currentDevice, onUpdate]);
 
   const handleAddAdapter = (adapter: Omit<NetworkAdapter, "id">) => {
     const newAdapter: NetworkAdapter = {
       ...adapter,
       id: crypto.randomUUID(),
-      port: String(adapters.length + 1)
+      port: String(localAdapters.length + 1)
     };
 
-    const updatedAdapters = [...adapters, newAdapter];
+    const updatedAdapters = [...localAdapters, newAdapter];
+    setLocalAdapters(updatedAdapters);
     onUpdate(updatedAdapters);
 
     if (currentDevice) {
@@ -57,7 +82,7 @@ const NetworkAdapters = ({
   };
 
   const handleRemoveAdapter = (id: string) => {
-    const adapter = adapters.find(a => a.id === id);
+    const adapter = localAdapters.find(a => a.id === id);
     if (!adapter) return;
 
     if (adapter.connected && adapter.connectedToDevice) {
@@ -77,7 +102,8 @@ const NetworkAdapters = ({
       }
     }
 
-    const updatedAdapters = adapters.filter(a => a.id !== id);
+    const updatedAdapters = localAdapters.filter(a => a.id !== id);
+    setLocalAdapters(updatedAdapters);
     onUpdate(updatedAdapters);
 
     if (currentDevice) {
@@ -98,14 +124,15 @@ const NetworkAdapters = ({
   };
 
   const toggleConnection = (id: string, targetDeviceId?: string) => {
-    const adapter = adapters.find(a => a.id === id);
+    const adapter = localAdapters.find(a => a.id === id);
     if (!adapter) return;
 
     if (adapter.connected) {
       // Disconnect
-      const updatedAdapters = adapters.map(a =>
+      const updatedAdapters = localAdapters.map(a =>
         a.id === id ? { ...a, connected: false, connectedToDevice: undefined } : a
       );
+      setLocalAdapters(updatedAdapters);
       onUpdate(updatedAdapters);
 
       // Update target device if it exists
@@ -131,8 +158,11 @@ const NetworkAdapters = ({
         adapter,
         currentDevice,
         targetDeviceId,
-        onUpdate,
-        adapters,
+        onUpdate: (updatedAdapters) => {
+          setLocalAdapters(updatedAdapters);
+          onUpdate(updatedAdapters);
+        },
+        adapters: localAdapters,
         availableDevices
       });
     }
@@ -154,7 +184,7 @@ const NetworkAdapters = ({
       </Dialog>
       
       <NetworkAdapterList 
-        adapters={adapters}
+        adapters={localAdapters}
         onToggleConnection={toggleConnection}
         onRemoveAdapter={handleRemoveAdapter}
         availableDevices={availableDevices}
