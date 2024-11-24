@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Rack } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Edit, MoreVertical } from "lucide-react";
+import { Edit, MoreVertical, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -58,6 +58,7 @@ export const RackHeader = ({ rack, onUpdateRack, onDeleteRack }: RackHeaderProps
           <DropdownMenuLabel>Rack Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setShowAddDevice(true)}>
+            <Plus className="mr-2 h-4 w-4" />
             Add Device
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setIsEditingRack(true)}>
