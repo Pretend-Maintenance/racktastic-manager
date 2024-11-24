@@ -21,7 +21,11 @@ const numberToIp = (num: number): string => {
 };
 
 // Simulate a network scan (in a real implementation, this would use actual network protocols)
-export const scanNetwork = async (startIp: string, endIp: string) => {
+export const scanNetwork = async (
+  startIp: string, 
+  endIp: string,
+  onProgress?: (progress: string) => void
+) => {
   console.log("Starting network scan simulation");
   
   if (!isValidIp(startIp) || !isValidIp(endIp)) {
@@ -36,23 +40,36 @@ export const scanNetwork = async (startIp: string, endIp: string) => {
   }
 
   const results: Array<{ip: string; status: string; deviceInfo?: any}> = [];
+  const total = end - start + 1;
   
   // Simulate scanning (in reality, this would use SNMP or other protocols)
   for (let i = start; i <= end; i++) {
     const currentIp = numberToIp(i);
+    const progress = Math.round(((i - start) / total) * 100);
+    
+    onProgress?.(`Scanning ${currentIp} (${progress}% complete)`);
     console.log("Scanning IP:", currentIp);
     
     // Simulate random discoveries (this is where real SNMP queries would go)
     if (Math.random() > 0.8) {
+      const deviceTypes = ["switch", "router", "server", "storage"];
+      const manufacturers = ["Cisco", "HP", "Dell", "Juniper"];
+      const deviceInfo = {
+        type: deviceTypes[Math.floor(Math.random() * deviceTypes.length)],
+        manufacturer: manufacturers[Math.floor(Math.random() * manufacturers.length)],
+        model: `Model-${Math.floor(Math.random() * 1000)}`,
+        firmware: `v${Math.floor(Math.random() * 10)}.${Math.floor(Math.random() * 10)}`,
+        serialNumber: `SN${Math.floor(Math.random() * 100000)}`,
+      };
+      
       results.push({
         ip: currentIp,
         status: "active",
-        deviceInfo: {
-          type: Math.random() > 0.5 ? "switch" : "server",
-          manufacturer: "Sample Manufacturer",
-          model: "Sample Model",
-        }
+        deviceInfo
       });
+      
+      onProgress?.(`Found active device at ${currentIp}`);
+      console.log("Device found:", deviceInfo);
     }
     
     // Add small delay to prevent UI freezing

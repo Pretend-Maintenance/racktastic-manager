@@ -4,26 +4,43 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { NetworkScanResults } from "./NetworkScanResults";
 import { scanNetwork } from "@/lib/network-scanner";
+import { Device } from "@/lib/types";
 
 export const NetworkScanner = () => {
   const [startIp, setStartIp] = useState("192.168.1.1");
   const [endIp, setEndIp] = useState("192.168.1.254");
   const [isScanning, setIsScanning] = useState(false);
+  const [scanProgress, setScanProgress] = useState<string>("");
   const [results, setResults] = useState<Array<{ip: string, status: string, deviceInfo?: any}>>([]);
 
   const handleScan = async () => {
     try {
       setIsScanning(true);
+      setResults([]);
+      setScanProgress("Initializing scan...");
       console.log("Starting network scan from", startIp, "to", endIp);
-      const scanResults = await scanNetwork(startIp, endIp);
+      
+      const scanResults = await scanNetwork(startIp, endIp, (progress) => {
+        setScanProgress(progress);
+        console.log("Scan progress:", progress);
+      });
+      
       setResults(scanResults);
+      setScanProgress("");
       toast.success("Network scan completed");
     } catch (error) {
       console.error("Scan failed:", error);
       toast.error("Failed to complete network scan");
+      setScanProgress("");
     } finally {
       setIsScanning(false);
     }
+  };
+
+  const handleImportDevice = (deviceInfo: any) => {
+    // Here you would typically integrate with your device management system
+    console.log("Importing device:", deviceInfo);
+    // You can add additional logic here to add the device to your system
   };
 
   return (
@@ -53,7 +70,15 @@ export const NetworkScanner = () => {
       >
         {isScanning ? "Scanning..." : "Start Network Scan"}
       </Button>
-      <NetworkScanResults results={results} />
+      
+      {scanProgress && (
+        <div className="text-sm text-muted-foreground">{scanProgress}</div>
+      )}
+      
+      <NetworkScanResults 
+        results={results} 
+        onImportDevice={handleImportDevice}
+      />
     </div>
   );
 };
