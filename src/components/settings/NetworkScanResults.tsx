@@ -10,6 +10,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Device, Rack } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState, useEffect } from "react";
 
 interface ScanResult {
   ip: string;
@@ -19,18 +28,41 @@ interface ScanResult {
 
 interface NetworkScanResultsProps {
   results: ScanResult[];
-  onImportDevice: (deviceInfo: any) => void;
+  onImportDevice: (deviceInfo: any, rackId?: string) => void;
+  racks: Rack[];
 }
 
-export const NetworkScanResults = ({ results, onImportDevice }: NetworkScanResultsProps) => {
-  const handleImport = (result: ScanResult) => {
+export const NetworkScanResults = ({ results, onImportDevice, racks }: NetworkScanResultsProps) => {
+  const [selectedRacks, setSelectedRacks] = useState<{[key: string]: string}>({});
+  
+  // Load results from localStorage on mount
+  useEffect(() => {
+    const savedResults = localStorage.getItem('networkScanResults');
+    if (savedResults) {
+      console.log("Loading saved scan results");
+    }
+  }, []);
+
+  // Save results to localStorage when they change
+  useEffect(() => {
+    console.log("Saving scan results to localStorage");
+    localStorage.setItem('networkScanResults', JSON.stringify(results));
+  }, [results]);
+
+  const handleImport = (result: ScanResult, index: string) => {
     if (!result.deviceInfo) {
       toast.error("No device information available to import");
       return;
     }
 
-    onImportDevice(result.deviceInfo);
-    toast.success(`Device at ${result.ip} imported successfully`);
+    const rackId = selectedRacks[index];
+    if (!rackId) {
+      toast.error("Please select a rack first");
+      return;
+    }
+
+    onImportDevice(result.deviceInfo, rackId);
+    toast.success(`Device at ${result.ip} imported successfully to selected rack`);
   };
 
   if (results.length === 0) return null;
@@ -43,6 +75,7 @@ export const NetworkScanResults = ({ results, onImportDevice }: NetworkScanResul
             <TableHead>IP Address</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Device Info</TableHead>
+            <TableHead>Rack</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -64,10 +97,29 @@ export const NetworkScanResults = ({ results, onImportDevice }: NetworkScanResul
               </TableCell>
               <TableCell>
                 {result.deviceInfo && (
+                  <Select
+                    value={selectedRacks[index]}
+                    onValueChange={(value) => setSelectedRacks(prev => ({...prev, [index]: value}))}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select a rack" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {racks.map((rack) => (
+                        <SelectItem key={rack.id} value={rack.id}>
+                          {rack.name} ({rack.location})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </TableCell>
+              <TableCell>
+                {result.deviceInfo && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleImport(result)}
+                    onClick={() => handleImport(result, index.toString())}
                     className="flex items-center gap-2"
                   >
                     <Plus className="h-4 w-4" />
