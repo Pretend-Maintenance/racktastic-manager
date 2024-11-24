@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MainNav } from "@/components/MainNav"
 import { Button } from "@/components/ui/button"
-import { Download, Upload, Trash2 } from "lucide-react"
+import { Download, Upload, Trash2, Terminal, Settings2, Database, Shield } from "lucide-react"
 import { toast } from "sonner"
 import { Location } from "@/lib/types"
 import { saveState } from "@/lib/storage"
@@ -15,9 +15,33 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const SettingsPage = () => {
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [consoleLines, setConsoleLines] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Simulate getting last 10 console lines
+    const getLastConsoleLogs = () => {
+      const logs = localStorage.getItem('console_logs');
+      if (logs) {
+        const parsedLogs = JSON.parse(logs);
+        setConsoleLines(parsedLogs.slice(-10));
+      }
+    };
+    
+    getLastConsoleLogs();
+    const interval = setInterval(getLastConsoleLogs, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   const handleBackupDownload = () => {
     const currentState = localStorage.getItem("datacenter_status")
@@ -62,7 +86,6 @@ const SettingsPage = () => {
         saveState(location)
         toast.success("Configuration restored successfully")
         
-        // Reset the file input
         event.target.value = ''
       } catch (error) {
         console.error("Error restoring backup:", error)
@@ -86,36 +109,111 @@ const SettingsPage = () => {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">Settings</h1>
           
-          <div className="bg-card rounded-lg p-6 space-y-6">
-            <h2 className="text-xl font-semibold">Backup & Restore</h2>
-            <div className="flex gap-4">
-              <Button onClick={handleBackupDownload} variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download Backup
-              </Button>
-              
-              <div className="relative">
-                <input
-                  type="file"
-                  accept=".cfg"
-                  onChange={handleRestore}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <Button variant="outline">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Restore Backup
-                </Button>
-              </div>
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="backup" className="border rounded-lg p-2">
+              <AccordionTrigger className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Backup & Restore
+              </AccordionTrigger>
+              <AccordionContent className="p-4 space-y-4">
+                <div className="flex gap-4">
+                  <Button onClick={handleBackupDownload} variant="outline">
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Backup
+                  </Button>
+                  
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".cfg"
+                      onChange={handleRestore}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Button variant="outline">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Restore Backup
+                    </Button>
+                  </div>
 
-              <Button 
-                variant="destructive" 
-                onClick={() => setShowClearDialog(true)}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear All Data
-              </Button>
-            </div>
-          </div>
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setShowClearDialog(true)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear All Data
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="console" className="border rounded-lg p-2">
+              <AccordionTrigger className="flex items-center gap-2">
+                <Terminal className="w-4 h-4" />
+                Console Output
+              </AccordionTrigger>
+              <AccordionContent>
+                <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+                  <div className="space-y-2">
+                    {consoleLines.map((line, index) => (
+                      <div key={index} className="text-sm font-mono">
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="system" className="border rounded-lg p-2">
+              <AccordionTrigger className="flex items-center gap-2">
+                <Settings2 className="w-4 h-4" />
+                System Information
+              </AccordionTrigger>
+              <AccordionContent className="p-4 space-y-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold">Version</h3>
+                    <p className="text-sm text-muted-foreground">1.0.0</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Last Backup</h3>
+                    <p className="text-sm text-muted-foreground">Never</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Storage Usage</h3>
+                    <p className="text-sm text-muted-foreground">Calculating...</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Browser</h3>
+                    <p className="text-sm text-muted-foreground">{navigator.userAgent}</p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="security" className="border rounded-lg p-2">
+              <AccordionTrigger className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Security
+              </AccordionTrigger>
+              <AccordionContent className="p-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">Access Control</h3>
+                    <Button variant="outline" className="w-full">
+                      Configure Permissions
+                    </Button>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Audit Log</h3>
+                    <Button variant="outline" className="w-full">
+                      View Audit Log
+                    </Button>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </div>
 
