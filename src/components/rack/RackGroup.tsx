@@ -19,10 +19,15 @@ export const RackGroup = ({
   onUpdateRack,
   onDeleteRack
 }: RackGroupProps) => {
+  // Determine grid columns based on number of racks
+  const gridClass = racks.length <= 1 
+    ? "w-[30%]" 
+    : "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6";
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">{locationName}</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 relative">
+      <div className={`relative ${gridClass}`}>
         {racks.map((rack) => (
           <div
             key={rack.id}
@@ -38,16 +43,16 @@ export const RackGroup = ({
           </div>
         ))}
         {/* Add Rack button positioned after the last rack */}
-        <div className="flex items-center justify-center min-h-[200px]">
-          <AddRackDialog onAddRack={(rackData) => {
-            // The AddRackDialog component will handle the location selection
-            onUpdateRack({
-              id: crypto.randomUUID(),
-              ...rackData,
-              devices: []
-            });
-          }} 
-          existingLocations={Array.from(new Set(racks.map(rack => rack.location)))}
+        <div className={`flex items-center justify-center min-h-[200px] ${racks.length <= 1 ? "w-full mt-4" : ""}`}>
+          <AddRackDialog 
+            onAddRack={(rackData) => {
+              onUpdateRack({
+                id: crypto.randomUUID(),
+                ...rackData,
+                devices: []
+              });
+            }} 
+            existingLocations={Array.from(new Set(racks.map(rack => rack.location)))}
           />
         </div>
       </div>
