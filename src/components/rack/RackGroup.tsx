@@ -21,7 +21,7 @@ export const RackGroup = ({
 }: RackGroupProps) => {
   // Determine grid columns based on number of racks
   const gridClass = racks.length <= 1 
-    ? "w-[30%] flex gap-4" 
+    ? "w-full flex gap-4" 
     : "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6";
 
   return (
@@ -31,7 +31,7 @@ export const RackGroup = ({
         {racks.map((rack) => (
           <div
             key={rack.id}
-            className="cursor-pointer"
+            className={racks.length <= 1 ? "w-[60%]" : ""}
             onClick={() => onSelectRack(rack)}
           >
             <RackView
@@ -43,7 +43,7 @@ export const RackGroup = ({
           </div>
         ))}
         {/* Add Rack button positioned next to the rack */}
-        <div className="flex items-center justify-center min-h-[200px]">
+        <div className={`flex items-center justify-center min-h-[200px] ${racks.length <= 1 ? "w-[40%]" : ""}`}>
           <AddRackDialog 
             onAddRack={(rackData) => {
               onUpdateRack({
