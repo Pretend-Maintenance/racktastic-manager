@@ -12,7 +12,7 @@ export const NetworkScanner = () => {
   const [endIp, setEndIp] = useState("192.168.1.254");
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState<string>("");
-  const [results, setResults] = useState<Array<{ip: string, status: string, deviceInfo?: any}>>([]);
+  const [results, setResults] = useState<Array<{ip: string, status: string, deviceInfo?: any, macAddress?: string}>>([]);
   const [racks, setRacks] = useState<Rack[]>([]);
 
   // Load racks and saved scan results on mount
@@ -70,7 +70,7 @@ export const NetworkScanner = () => {
       return;
     }
 
-    // Create device with default position
+    // Create device with default position and include IP and MAC address
     const newDevice: Device = {
       id: crypto.randomUUID(),
       name: `${deviceInfo.manufacturer} ${deviceInfo.model}`,
@@ -80,7 +80,9 @@ export const NetworkScanner = () => {
       height: 1, // Default height
       position: 1, // Default position
       networkAdapters: [],
-      status: "inactive"
+      status: "inactive",
+      ipAddress: deviceInfo.ip, // Include the IP address from scan
+      macAddress: deviceInfo.macAddress // Include the MAC address if available
     };
 
     // Update rack with new device
@@ -100,6 +102,7 @@ export const NetworkScanner = () => {
 
     console.log("Device imported:", newDevice);
     console.log("Updated rack:", updatedRack);
+    toast.success("Device imported successfully");
   };
 
   return (

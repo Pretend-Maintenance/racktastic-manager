@@ -24,6 +24,8 @@ export interface Device {
   networkAdapters: NetworkAdapter[];
   status: "active" | "inactive" | "maintenance";
   assetReference?: string;
+  ipAddress?: string;
+  macAddress?: string;
 }
 
 export interface Rack {

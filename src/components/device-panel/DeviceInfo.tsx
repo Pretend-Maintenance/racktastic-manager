@@ -47,6 +47,18 @@ export const DeviceInfo = ({ device, onStatusChange }: DeviceInfoProps) => {
           <span className="text-muted-foreground">Position</span>
           <span className="font-medium">U{device.position}</span>
         </div>
+        {device.ipAddress && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">IP Address</span>
+            <span className="font-medium">{device.ipAddress}</span>
+          </div>
+        )}
+        {device.macAddress && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">MAC Address</span>
+            <span className="font-medium">{device.macAddress}</span>
+          </div>
+        )}
         {device.assetReference && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Asset Reference</span>
