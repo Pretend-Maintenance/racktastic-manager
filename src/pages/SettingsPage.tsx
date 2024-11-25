@@ -27,50 +27,60 @@ const SettingsPage = () => {
           <h1 className="text-2xl font-bold mb-6">Settings</h1>
           
           <Accordion type="single" collapsible className="w-full space-y-4">
-            <AccordionItem value="network" className="border rounded-lg p-2">
-              <AccordionTrigger className="flex items-center gap-2">
-                <Network className="w-4 h-4" />
-                Network Scanner
+            <AccordionItem value="network" className="border rounded-lg p-2 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+              <AccordionTrigger className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-3">
+                  <Network className="w-5 h-5" />
+                  Network Scanner
+                </div>
               </AccordionTrigger>
               <AccordionContent className="p-4">
                 <NetworkScanner />
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="backup" className="border rounded-lg p-2">
-              <AccordionTrigger className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                Backup & Restore
+            <AccordionItem value="backup" className="border rounded-lg p-2 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+              <AccordionTrigger className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-3">
+                  <Database className="w-5 h-5" />
+                  Backup & Restore
+                </div>
               </AccordionTrigger>
               <AccordionContent className="p-4">
                 <BackupSection />
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="console" className="border rounded-lg p-2">
-              <AccordionTrigger className="flex items-center gap-2">
-                <Terminal className="w-4 h-4" />
-                Console Output
+            <AccordionItem value="console" className="border rounded-lg p-2 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+              <AccordionTrigger className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-3">
+                  <Terminal className="w-5 h-5" />
+                  Console Output
+                </div>
               </AccordionTrigger>
               <AccordionContent>
                 <ConsoleSection />
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="system" className="border rounded-lg p-2">
-              <AccordionTrigger className="flex items-center gap-2">
-                <Settings2 className="w-4 h-4" />
-                System Information
+            <AccordionItem value="system" className="border rounded-lg p-2 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+              <AccordionTrigger className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-3">
+                  <Settings2 className="w-5 h-5" />
+                  System Information
+                </div>
               </AccordionTrigger>
               <AccordionContent className="p-4">
                 <SystemSection />
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="security" className="border rounded-lg p-2">
-              <AccordionTrigger className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Security
+            <AccordionItem value="security" className="border rounded-lg p-2 bg-secondary/5 hover:bg-secondary/10 transition-colors">
+              <AccordionTrigger className="flex items-center gap-4 px-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5" />
+                  Security
+                </div>
               </AccordionTrigger>
               <AccordionContent className="p-4">
                 <SecuritySection />
