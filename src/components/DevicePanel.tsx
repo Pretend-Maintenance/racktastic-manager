@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import { useEffect, useState, useRef } from "react";
 import { logTransaction, getDeviceLogs } from "@/lib/storage";
 
-// Split into smaller components for better maintainability
 import { DeviceInfo } from "./device-panel/DeviceInfo";
 import { DeviceHeader } from "./device-panel/DeviceHeader";
 import { RecentChanges } from "./device-panel/RecentChanges";
+import { EditDeviceForm } from "./device-panel/EditDeviceForm";
 
 interface DevicePanelProps {
   device: Device;
@@ -54,25 +54,24 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
 
   const handleEdit = () => {
     setIsEditing(true);
-    const name = prompt("Enter new device name:", currentDevice.name);
-    if (name && name !== currentDevice.name) {
-      const updatedDevice = { ...currentDevice, name };
-      setCurrentDevice(updatedDevice);
-      onUpdate(updatedDevice);
-      logTransaction(
-        "updated",
-        "device",
-        name,
-        [{
-          field: "name",
-          oldValue: currentDevice.name,
-          newValue: name
-        }],
-        currentDevice
-      );
-      toast.success("Device name updated successfully");
-    }
+  };
+
+  const handleSaveEdit = (updatedDevice: Device) => {
+    setCurrentDevice(updatedDevice);
+    onUpdate(updatedDevice);
     setIsEditing(false);
+    logTransaction(
+      "updated",
+      "device",
+      updatedDevice.name,
+      [{
+        field: "device",
+        oldValue: JSON.stringify(currentDevice),
+        newValue: JSON.stringify(updatedDevice)
+      }],
+      updatedDevice
+    );
+    toast.success("Device updated successfully");
   };
 
   return (
@@ -86,20 +85,30 @@ const DevicePanel = ({ device, onClose, onUpdate, onDelete, availableDevices }: 
         />
 
         <div className="space-y-6">
-          <DeviceInfo 
-            device={currentDevice}
-            onStatusChange={handleStatusChange}
-          />
+          {isEditing ? (
+            <EditDeviceForm
+              device={currentDevice}
+              onSave={handleSaveEdit}
+              onCancel={() => setIsEditing(false)}
+            />
+          ) : (
+            <>
+              <DeviceInfo 
+                device={currentDevice}
+                onStatusChange={handleStatusChange}
+              />
 
-          <NetworkAdapters
-            adapters={currentDevice.networkAdapters}
-            onUpdate={handleNetworkAdapterUpdate}
-            availableDevices={availableDevices}
-            currentDevice={currentDevice}
-          />
+              <NetworkAdapters
+                adapters={currentDevice.networkAdapters}
+                onUpdate={handleNetworkAdapterUpdate}
+                availableDevices={availableDevices}
+                currentDevice={currentDevice}
+              />
 
-          {recentChanges.length > 0 && (
-            <RecentChanges changes={recentChanges} />
+              {recentChanges.length > 0 && (
+                <RecentChanges changes={recentChanges} />
+              )}
+            </>
           )}
         </div>
       </div>
