@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createDefaultAdapters } from "@/lib/storage";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AddDeviceDialogProps {
   rack: Rack;
@@ -122,113 +123,115 @@ export function AddDeviceDialog({ rack, onUpdateRack, onClose }: AddDeviceDialog
           Add Device
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Add New Device</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="name">Device Name *</Label>
-            <Input
-              id="name"
-              value={newDevice.name}
-              onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="type">Device Type *</Label>
-            <Select
-              value={newDevice.type}
-              onValueChange={(value) => handleDeviceTypeChange(value as DeviceType)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="server">Server</SelectItem>
-                <SelectItem value="switch">Switch</SelectItem>
-                <SelectItem value="firewall">Firewall</SelectItem>
-                <SelectItem value="storage">Storage</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {showTemplate && (
+        <ScrollArea className="h-[70vh] pr-4">
+          <div className="space-y-4">
             <div>
-              <Label>Device Template</Label>
-              <Select value={selectedTemplate} onValueChange={handleTemplateSelection}>
+              <Label htmlFor="name">Device Name *</Label>
+              <Input
+                id="name"
+                value={newDevice.name}
+                onChange={(e) => setNewDevice({ ...newDevice, name: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="type">Device Type *</Label>
+              <Select
+                value={newDevice.type}
+                onValueChange={(value) => handleDeviceTypeChange(value as DeviceType)}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a template..." />
+                  <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {newDevice.type === "switch" && (
-                    <>
-                      <SelectItem value="switch-4">4-Port Switch</SelectItem>
-                      <SelectItem value="switch-24">24-Port Switch</SelectItem>
-                    </>
-                  )}
-                  {newDevice.type === "firewall" && (
-                    <SelectItem value="firewall">Standard Firewall (4 ports)</SelectItem>
-                  )}
+                  <SelectItem value="server">Server</SelectItem>
+                  <SelectItem value="switch">Switch</SelectItem>
+                  <SelectItem value="firewall">Firewall</SelectItem>
+                  <SelectItem value="storage">Storage</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          <div>
-            <Label htmlFor="manufacturer">Manufacturer *</Label>
-            <Input
-              id="manufacturer"
-              value={newDevice.manufacturer}
-              onChange={(e) => setNewDevice({ ...newDevice, manufacturer: e.target.value })}
-              required
-            />
+            {showTemplate && (
+              <div>
+                <Label>Device Template</Label>
+                <Select value={selectedTemplate} onValueChange={handleTemplateSelection}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a template..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {newDevice.type === "switch" && (
+                      <>
+                        <SelectItem value="switch-4">4-Port Switch</SelectItem>
+                        <SelectItem value="switch-24">24-Port Switch</SelectItem>
+                      </>
+                    )}
+                    {newDevice.type === "firewall" && (
+                      <SelectItem value="firewall">Standard Firewall (4 ports)</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="manufacturer">Manufacturer *</Label>
+              <Input
+                id="manufacturer"
+                value={newDevice.manufacturer}
+                onChange={(e) => setNewDevice({ ...newDevice, manufacturer: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="model">Model *</Label>
+              <Input
+                id="model"
+                value={newDevice.model}
+                onChange={(e) => setNewDevice({ ...newDevice, model: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="height">Height (U) *</Label>
+              <Input
+                id="height"
+                type="number"
+                min="1"
+                value={newDevice.height}
+                onChange={(e) => setNewDevice({ ...newDevice, height: parseInt(e.target.value) })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="position">Position *</Label>
+              <Input
+                id="position"
+                type="number"
+                min="1"
+                max={rack.totalU}
+                value={newDevice.position}
+                onChange={(e) => setNewDevice({ ...newDevice, position: parseInt(e.target.value) })}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="assetReference">Asset Reference</Label>
+              <Input
+                id="assetReference"
+                value={newDevice.assetReference}
+                onChange={(e) => setNewDevice({ ...newDevice, assetReference: e.target.value })}
+                placeholder="Optional asset reference"
+              />
+            </div>
+            <Button onClick={handleAddDevice}>Add Device</Button>
           </div>
-          <div>
-            <Label htmlFor="model">Model *</Label>
-            <Input
-              id="model"
-              value={newDevice.model}
-              onChange={(e) => setNewDevice({ ...newDevice, model: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="height">Height (U) *</Label>
-            <Input
-              id="height"
-              type="number"
-              min="1"
-              value={newDevice.height}
-              onChange={(e) => setNewDevice({ ...newDevice, height: parseInt(e.target.value) })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="position">Position *</Label>
-            <Input
-              id="position"
-              type="number"
-              min="1"
-              max={rack.totalU}
-              value={newDevice.position}
-              onChange={(e) => setNewDevice({ ...newDevice, position: parseInt(e.target.value) })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="assetReference">Asset Reference</Label>
-            <Input
-              id="assetReference"
-              value={newDevice.assetReference}
-              onChange={(e) => setNewDevice({ ...newDevice, assetReference: e.target.value })}
-              placeholder="Optional asset reference"
-            />
-          </div>
-          <Button onClick={handleAddDevice}>Add Device</Button>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
