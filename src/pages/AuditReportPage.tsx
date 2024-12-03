@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { MainNav } from "@/components/MainNav";
 import { Button } from "@/components/ui/button";
-import { FileSpreadsheet, FileText, Download, Shield } from "lucide-react";
+import { FileSpreadsheet, FileText, Download, Shield, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -103,9 +104,12 @@ const AuditReportPage = () => {
                   <Download className="mr-2 h-4 w-4" />
                   {isGenerating ? "Generating..." : "Generate Spreadsheet Report"}
                 </Button>
-                <div className="text-sm text-muted-foreground">
-                  Includes: Device inventory, capacity usage, power consumption
-                </div>
+                <Link to="/transactions">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="mr-2 h-4 w-4" />
+                    View Transaction Log
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -118,18 +122,32 @@ const AuditReportPage = () => {
                 Documentation
               </CardTitle>
               <CardDescription>
-                Manage and access device documentation and maintenance records
+                Access product documentation and user guides
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Button variant="outline" className="w-full">
-                  <FileText className="mr-2 h-4 w-4" />
-                  View Documentation
-                </Button>
-                <div className="text-sm text-muted-foreground">
-                  Access manuals, maintenance logs, and device specifications
-                </div>
+                <a href="https://github.com/your-repo/docs/wiki" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="mr-2 h-4 w-4" />
+                    User Guide
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+                <a href="https://github.com/your-repo/docs/wiki/api" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="mr-2 h-4 w-4" />
+                    API Documentation
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
+                <a href="https://github.com/your-repo/docs/wiki/troubleshooting" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Troubleshooting Guide
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </a>
               </div>
             </CardContent>
           </Card>
