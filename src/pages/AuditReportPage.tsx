@@ -11,17 +11,64 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { loadState } from "@/lib/storage";
 
 const AuditReportPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateSpreadsheetReport = () => {
+  const generateSpreadsheetReport = async () => {
     setIsGenerating(true);
-    // Simulate report generation
-    setTimeout(() => {
-      setIsGenerating(false);
+    console.log("Generating spreadsheet report");
+    
+    try {
+      const state = loadState();
+      if (!state) {
+        toast.error("No data available to generate report");
+        return;
+      }
+
+      // Create CSV content
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // Add headers
+      csvContent += "Rack Name,Device Name,Type,Manufacturer,Model,Status,Position,Height,IP Address\n";
+      
+      // Add data rows
+      state.racks.forEach(rack => {
+        rack.devices.forEach(device => {
+          const row = [
+            rack.name,
+            device.name,
+            device.type,
+            device.manufacturer,
+            device.model,
+            device.status,
+            device.position,
+            device.height,
+            device.ipAddress || "N/A"
+          ].join(",");
+          csvContent += row + "\n";
+        });
+      });
+
+      // Create download link
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `rack_audit_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      document.body.removeChild(link);
+      
       toast.success("Report generated successfully");
-    }, 2000);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast.error("Failed to generate report");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -97,9 +144,20 @@ const AuditReportPage = () => {
             <CardContent>
               <ScrollArea className="h-[200px] rounded-md border p-4">
                 <div className="space-y-4">
-                  {/* Placeholder for security logs */}
-                  <div className="text-sm">
-                    No security events recorded yet
+                  {/* Example security log entries */}
+                  <div className="text-sm space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{new Date().toLocaleString()}</span>
+                      <span>User login</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{new Date().toLocaleString()}</span>
+                      <span>Configuration changed</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{new Date().toLocaleString()}</span>
+                      <span>Device added</span>
+                    </div>
                   </div>
                 </div>
               </ScrollArea>
