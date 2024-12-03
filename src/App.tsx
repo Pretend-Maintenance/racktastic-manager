@@ -1,21 +1,22 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import SettingsPage from "./pages/SettingsPage";
-import TransactionLogPage from "./pages/TransactionLogPage";
 import NetworkMapPage from "./pages/NetworkMapPage";
+import SettingsPage from "./pages/SettingsPage";
+import AuditReportPage from "./pages/AuditReportPage";
+import { Toaster } from "./components/ui/toaster";
+import "./App.css";
 
 function App() {
   return (
-    <Router>
+    <>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/transactions" element={<TransactionLogPage />} />
         <Route path="/network-map" element={<NetworkMapPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/audit" element={<AuditReportPage />} />
       </Routes>
       <Toaster />
-    </Router>
+    </>
   );
 }
 

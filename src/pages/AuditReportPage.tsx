@@ -14,14 +14,17 @@ import { toast } from "sonner";
 import { loadState } from "@/lib/storage";
 
 const AuditReportPage = () => {
+  console.log("Rendering AuditReportPage");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateSpreadsheetReport = async () => {
+    console.log("Starting spreadsheet generation");
     setIsGenerating(true);
-    console.log("Generating spreadsheet report");
     
     try {
       const state = loadState();
+      console.log("Loaded state for report:", state);
+      
       if (!state) {
         toast.error("No data available to generate report");
         return;
@@ -62,6 +65,7 @@ const AuditReportPage = () => {
       link.click();
       document.body.removeChild(link);
       
+      console.log("Report generated successfully");
       toast.success("Report generated successfully");
     } catch (error) {
       console.error("Error generating report:", error);
